@@ -49,29 +49,30 @@ def astar_search(grid, start, goal):
     return None  # No path found
 
 
-def change_distance(table, distances, point, n):
-    if n:
-        table[:, -1] = distances[tuple(point)][:-n]
-    else:
-        table[:, -1] = distances[tuple(point)]
-
-    new_table = np.array([])
-
-    for indx, el in enumerate(table[:, 0:2]):
+def change_distance(table, distances, point, points_ref):
+    for idx, el in enumerate(table[:, :2]):
         if (el == point).all():
-            new_table = np.delete(table, indx, 0)
-            distances.pop(tuple(el))
+            idx_to_del = idx
 
-    return new_table
+    print(table[idx_to_del], tuple(point), idx_to_del)
+    table[:, -1] = distances[idx_to_del]
+    table = np.delete(table, idx_to_del, 0)
+    distances = np.delete(distances, idx_to_del, 0)
+    distances = np.delete(distances, idx_to_del, 1)
+    points_ref = np.delete(points_ref, idx_to_del, 0)
+
+    return table, distances, points_ref
 
 
-def topsis_n_points(table_original, weights, search_min, n):
+def topsis_n_points(table_original, weights, search_min, points_ref, n):
     table_current = np.copy(table_original)
+    distances_current = np.copy(distance_each_other)
+    points_ref_current = np.copy(points_ref)
     path = np.array([[0, 0, 0, 0, 0, 0, 0]])
-    for it in range(n):
+    for _ in range(n):
         res = top.find_best(table_current[:, 2:], weights, search_min, list(zip(table_current[:, 0], table_current[:, 1])))
         path = np.concatenate((path, [res]), axis=0)
-        table_current = change_distance(table_current, distance_dict, res[:2], it)
+        table_current, distances_current, points_ref_current = change_distance(table_current, distances_current, res[:2], points_ref_current)
 
     return path[1:]
 
@@ -81,8 +82,11 @@ arr = df1.values.T
 df2 = pd.read_excel('punkty.xlsx', usecols='B:F', skiprows=0, nrows=54)
 points = df2.values
 
+points_ref = [(x, y) for x, y in points[:, :2]]
+
 distance_each_other = np.zeros((points.shape[0], points.shape[0]))
 distance_base = np.zeros(points.shape[0])
+
 
 base_coords = (55, 2)
 
@@ -96,20 +100,16 @@ for idx1 in range(points.shape[0]):
         if path:
             distance_each_other[idx1, idx2] = len(path) - 1
 
+
 distance_each_other = distance_each_other + distance_each_other.T
-
-distance_dict = {}
-for idx in range(points.shape[0]):
-    distance_dict[tuple(points[idx, :2])] = distance_each_other[idx]
-
 distance_base = np.resize(distance_base, (54, 1))
 
 points = np.concatenate((points, distance_base), axis=1)
 #print(points)
 
-weights = np.array([0.40, 0.25, 0.25, 0.1])
+weights = np.array([0.15, 0.2, 0.3, 0.35])
 
-kerfus = topsis_n_points(points, weights, [1, 1, 0, 0], 5)
+kerfus = topsis_n_points(points, weights, [1, 1, 0, 0], points_ref, 10)
 
 kerfus_tab = [["lp", "x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]]
 
