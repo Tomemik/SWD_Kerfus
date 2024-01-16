@@ -1,19 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import numpy as np
+from tabulate import tabulate
 # Dane z pliku excel Metoda Topsis, kod zmieniony dla obliczania v- z nadir.
 
 # Input matrix
-A = np.array([[700,  2, 6, 8],
-              [250,  2, 4, 8],
-              [1200, 6, 9, 16],
-              [880,  4, 9, 12],
-              [450,  3, 8, 12]]).astype(float)
+# A = np.array([[700,  2, 6, 8],
+#              [250,  2, 4, 8],
+#              [1200, 6, 9, 16],
+#              [880,  4, 9, 12],
+#              [450,  3, 8, 12]]).astype(float)
 
 
-W = np.array([0.35, 0.3, 0.1, 0.25])  # weights for columns
+#W = np.array([0.35, 0.3, 0.1, 0.25])  # weights for columns
 
-search_for_min = [0, 1, 1, 1]  # True column values will search for maximum
+#search_for_min = [0, 1, 1, 1]  # True column values will search for maximum
 
 
 
@@ -60,7 +61,7 @@ def naiwny_filtracja(X):
 
 
 # main algorithm
-def find_best(A, W, search_for_min):
+def find_best(A, W, search_for_min, points):
     A_shape = A.shape
     M_norm = np.zeros(A_shape)
 
@@ -71,18 +72,18 @@ def find_best(A, W, search_for_min):
                 M_norm[i, j] = (1 - (A[i, j] / abs_dj)) * W[j]  # calculate normalized el with flip
             else:  # default
                 M_norm[i, j] = A[i, j] / abs_dj * W[j]
-    print("Macierz znormalizowana z wagami")
-    print(M_norm)
+    #print("Macierz znormalizowana z wagami")
+    #print(M_norm)
 
     v_ideal = np.min(M_norm, axis=0)
 
     not_dominated = naiwny_filtracja(M_norm.copy())
 
     v_not_ideal = np.max(not_dominated, axis=0)  # nadir
-    # v_not_ideal = np.min(M_norm, axis=0)  # basic algorithm
+    #v_not_ideal = np.min(M_norm, axis=0)  # basic algorithm
 
-    print("v* : \n", v_ideal)
-    print("v- : \n", v_not_ideal)
+    #print("v* : \n", v_ideal)
+    #print("v- : \n", v_not_ideal)
 
     di_ideal = np.zeros((A_shape[0], 1))
     di_not_ideal = np.zeros((A_shape[0], 1))
@@ -92,23 +93,24 @@ def find_best(A, W, search_for_min):
         di_not_ideal[i] = np.sqrt(sum(np.power(M_norm[i, :] - v_not_ideal, 2)))
         ci[i] = di_not_ideal[i] / (di_ideal[i] + di_not_ideal[i])
 
-    print("di+ : \n", di_ideal)
-    print("di- : \n", di_not_ideal)
-    print("ci : \n", ci)
+    #print("di+ : \n", di_ideal)
+    #print("di- : \n", di_not_ideal)
+    #print("ci : \n", ci)
 
-    A = np.hstack(([[i+1] for i in range(A_shape[0])], ci, A))  # add record number column, add calculated ci
+    A = np.hstack((points, ci, A))  # add record number column, add calculated ci
 
-    A = A[A[:, 1].argsort()[::-1]]  # sort matrix by ci, make it descending order
-    A[:, 1] = np.around(A[:, 1], decimals=3)  # round ci to make it display better
+    A = A[A[:, 2].argsort()[::-1]]  # sort matrix by ci, make it descending order
+    A[:, 2] = np.around(A[:, 2], decimals=3)  # round ci to make it display better
 
     np.set_printoptions(suppress=True)  # display results in non-scientific formatting
-    print("Wynik: ")
-    print("    id         ci    cena      ram    wyglad   aparat")
-    print(A)
+    print("Top 5: ")
+    names = [["x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]]
+    ranking = np.append(names, A, axis=0)
+    print(tabulate(ranking[:6], headers='firstrow'))
     # wynik metody zmodyfikowanej - punkt antyidealny to nadir
     # wyswietlam orginalne dane z dodatkowym numerem (kolumna id = numer wiersza w wejściowej tabeli liczony od 1)
     # i obliczoną wagą
-    return A
+    return A[0]
 
 # code execution
-find_best(A, W, search_for_min)
+#find_best(A, W, search_for_min)
