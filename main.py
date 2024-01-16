@@ -2,7 +2,6 @@ import heapq
 import pandas as pd
 import numpy as np
 import openpyxl
-import alg_topsis as top
 
 
 def manhattan_distance(point1, point2):
@@ -49,15 +48,7 @@ def astar_search(grid, start, goal):
 
 
 def change_distance(table, distances, point):
-    table[:, -1] = distances[(point[0], point[1])]
-
-    new_table = np.array([])
-
-    for indx, el in enumerate(table[:, 0:2]):
-        if (el == point).all():
-            new_table = np.delete(table, indx, 0)
-
-    return new_table
+    table[:, -1] = distances[point]
 
 
 df1 = pd.read_excel('path.xlsx', usecols='B:BE', skiprows=0, nrows=29)
@@ -91,14 +82,8 @@ for idx in range(points.shape[0]):
 distance_base = np.resize(distance_base, (54, 1))
 
 points = np.concatenate((points, distance_base), axis=1)
-#print(points)
+print(points)
 
-weights = np.array([0.40, 0.25, 0.25, 0.1])
+change_distance(points, distance_dict, (7, 7))
+print(points)
 
-res = top.find_best(points[:, 2:], weights, [1, 1, 0, 0], list(zip(points[:, 0], points[:, 1])))
-
-new_point = res[0:2]
-
-points_v2 = change_distance(points, distance_dict, new_point)
-
-top.find_best(points_v2[:, 2:], weights, [1, 1, 0, 0], list(zip(points[:, 0], points_v2[:, 1])))
