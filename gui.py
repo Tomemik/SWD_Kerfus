@@ -51,9 +51,9 @@ class MainScreen(QWidget):
 
         self.show_excel_button = QPushButton(self)
         self.show_excel_button.setStyleSheet("image: url(./grafika/but_dane.png);"
-                                         "width: 120px;"
-                                         "height: 40px;"
-                                         "background-color: transparent;")
+                                             "width: 120px;"
+                                             "height: 40px;"
+                                             "background-color: transparent;")
         self.show_excel_button.clicked.connect(lambda: self.show_excel_table(stacked_widget))
         self.layout.addWidget(self.show_excel_button)
 
@@ -79,6 +79,7 @@ class MainScreen(QWidget):
         excel_table_screen.load_excel_data()
 
 def main():
+    icon_path = "./grafika/szur.png"
     app = QApplication(sys.argv)
 
     main_window = QMainWindow()
@@ -100,7 +101,7 @@ def main():
     stacked_widget.addWidget(screen_results)
 
     main_window.setCentralWidget(stacked_widget)
-
+    main_window.setWindowIcon(QIcon(icon_path))
     main_window.show()
     sys.exit(app.exec())
 
