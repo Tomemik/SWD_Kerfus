@@ -1,6 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QPushButton, QWidget, QLabel, QStackedWidget, QHBoxLayout, QTableWidgetItem
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon
 import pandas as pd
 import numpy as np
 import openpyxl
@@ -58,6 +59,7 @@ class MainScreen(QWidget):
         excel_table_screen.load_excel_data()
 
 def main():
+    icon_path = "./grafika/szur.png"
     app = QApplication(sys.argv)
 
     main_window = QMainWindow()
@@ -79,7 +81,7 @@ def main():
     stacked_widget.addWidget(screen_results)
 
     main_window.setCentralWidget(stacked_widget)
-
+    main_window.setWindowIcon(QIcon(icon_path))
     main_window.show()
     sys.exit(app.exec())
 
