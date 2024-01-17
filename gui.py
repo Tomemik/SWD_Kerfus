@@ -1,6 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QPushButton, QWidget, QLabel, QStackedWidget, QHBoxLayout, QTableWidgetItem
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QIcon, QPixmap
 import pandas as pd
 import numpy as np
 import openpyxl
@@ -20,15 +21,27 @@ class MainScreen(QWidget):
 
         button_layout = QHBoxLayout()
 
-        self.topsis_button = QPushButton("TOPSIS")
+        self.topsis_button = QPushButton(self)
+        self.topsis_button.setStyleSheet("image: url(./grafika/but_topsis.png);"
+                                         "width: 120px;"
+                                         "height: 40px;"
+                                         "background-color: transparent;")
         self.topsis_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(1))
         button_layout.addWidget(self.topsis_button)
 
-        self.rsm_button = QPushButton("RSM")
+        self.rsm_button = QPushButton(self)
+        self.rsm_button.setStyleSheet("image: url(./grafika/but_rsm.png);"
+                                         "width: 120px;"
+                                         "height: 40px;"
+                                         "background-color: transparent;")
         self.rsm_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(2))
         button_layout.addWidget(self.rsm_button)
 
-        self.uta_button = QPushButton("UTA")
+        self.uta_button = QPushButton(self)
+        self.uta_button.setStyleSheet("image: url(./grafika/but_uta.png);"
+                                         "width: 120px;"
+                                         "height: 40px;"
+                                         "background-color: transparent;")
         self.uta_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(3))
         button_layout.addWidget(self.uta_button)
 
@@ -36,11 +49,19 @@ class MainScreen(QWidget):
 
         self.layout.addLayout(button_layout)
 
-        self.show_excel_button = QPushButton("Dane")
+        self.show_excel_button = QPushButton(self)
+        self.show_excel_button.setStyleSheet("image: url(./grafika/but_dane.png);"
+                                         "width: 120px;"
+                                         "height: 40px;"
+                                         "background-color: transparent;")
         self.show_excel_button.clicked.connect(lambda: self.show_excel_table(stacked_widget))
         self.layout.addWidget(self.show_excel_button)
 
-        self.results_button = QPushButton("Wyniki")
+        self.results_button = QPushButton(self)
+        self.results_button.setStyleSheet("image: url(./grafika/but_wyniki.png);"
+                                         "width: 120px;"
+                                         "height: 40px;"
+                                         "background-color: transparent;")
         self.results_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(4))
         self.layout.addWidget(self.results_button)
 
