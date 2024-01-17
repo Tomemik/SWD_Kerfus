@@ -1,12 +1,12 @@
 from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget
 
-class ScreenUTA(QWidget):
+class ScreenResults(QWidget):
     def __init__(self):
         super().__init__()
 
         self.layout = QVBoxLayout()
 
-        self.label = QLabel("UTA")
+        self.label = QLabel("Wyniki")
         self.layout.addWidget(self.label)
 
         self.back_button = QPushButton("WROC")

@@ -6,7 +6,7 @@ import numpy as np
 import openpyxl
 
 
-import Topsis, RSM, Uta, excel
+import Topsis, RSM, Uta, excel, Results
 
 
 class MainScreen(QWidget):
@@ -40,6 +40,10 @@ class MainScreen(QWidget):
         self.show_excel_button.clicked.connect(lambda: self.show_excel_table(stacked_widget))
         self.layout.addWidget(self.show_excel_button)
 
+        self.results_button = QPushButton("Wyniki")
+        self.results_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(4))
+        self.layout.addWidget(self.results_button)
+
         self.setLayout(self.layout)
 
         self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -52,6 +56,7 @@ class MainScreen(QWidget):
 
         # Load Excel data when the screen is shown
         excel_table_screen.load_excel_data()
+
 def main():
     app = QApplication(sys.argv)
 
@@ -63,13 +68,15 @@ def main():
 
     main_screen = MainScreen(stacked_widget)
     screen_topsis = Topsis.ScreenTopsis()
-    screen_rsm = RSM.ScreenTopsis()
-    screen_uta = Uta.ScreenTopsis()
+    screen_rsm = RSM.ScreenRSM()
+    screen_uta = Uta.ScreenUTA()
+    screen_results = Results.ScreenResults()
 
     stacked_widget.addWidget(main_screen)
     stacked_widget.addWidget(screen_topsis)
     stacked_widget.addWidget(screen_rsm)
     stacked_widget.addWidget(screen_uta)
+    stacked_widget.addWidget(screen_results)
 
     main_window.setCentralWidget(stacked_widget)
 

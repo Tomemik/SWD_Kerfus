@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget
 
-class ScreenTopsis(QWidget):
+class ScreenRSM(QWidget):
     def __init__(self):
         super().__init__()
 
