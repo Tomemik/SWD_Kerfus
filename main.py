@@ -4,6 +4,8 @@ import numpy as np
 import openpyxl
 import alg_topsis as top
 from tabulate import tabulate
+import matplotlib.pyplot as plt
+from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 
 
 def manhattan_distance(point1, point2):
@@ -54,7 +56,6 @@ def change_distance(table, distances, point, points_ref):
         if (el == point).all():
             idx_to_del = idx
 
-    print(table[idx_to_del], tuple(point), idx_to_del)
     table[:, -1] = distances[idx_to_del]
     table = np.delete(table, idx_to_del, 0)
     distances = np.delete(distances, idx_to_del, 0)
@@ -76,10 +77,11 @@ def topsis_n_points(table_original, weights, search_min, points_ref, n):
 
     return path[1:]
 
-df1 = pd.read_excel('path.xlsx', usecols='B:BE', skiprows=0, nrows=29)
+
+df1 = pd.read_excel('sklep_3.xlsx', sheet_name='mapa', usecols='B:BE', skiprows=0, nrows=29)
 arr = df1.values.T
 
-df2 = pd.read_excel('punkty.xlsx', usecols='B:F', skiprows=0, nrows=54)
+df2 = pd.read_excel('sklep_3.xlsx', sheet_name='punkty', usecols='B:F', skiprows=0, nrows=54, keep_default_na=False)
 points = df2.values
 
 points_ref = [(x, y) for x, y in points[:, :2]]
@@ -87,8 +89,9 @@ points_ref = [(x, y) for x, y in points[:, :2]]
 distance_each_other = np.zeros((points.shape[0], points.shape[0]))
 distance_base = np.zeros(points.shape[0])
 
-
-base_coords = (55, 2)
+base_coords = np.argwhere(arr == 6)
+base_coords = tuple(base_coords[0])
+arr[base_coords] = 0
 
 for idx1 in range(points.shape[0]):
     path = astar_search(arr, tuple(points[idx1, :2]), base_coords)
@@ -102,12 +105,12 @@ for idx1 in range(points.shape[0]):
 
 
 distance_each_other = distance_each_other + distance_each_other.T
-distance_base = np.resize(distance_base, (54, 1))
+distance_base = np.resize(distance_base, (points.shape[0], 1))
 
 points = np.concatenate((points, distance_base), axis=1)
 #print(points)
 
-weights = np.array([0.15, 0.2, 0.3, 0.35])
+weights = np.array([0.25, 0.2, 0.3, 0.25])
 
 kerfus = topsis_n_points(points, weights, [1, 1, 0, 0], points_ref, 10)
 
@@ -117,3 +120,39 @@ for i, el in enumerate(kerfus):
     kerfus_tab = np.append(kerfus_tab, [np.append(i+1, el)], axis=0)
 
 print(tabulate(kerfus_tab, headers="firstrow"))
+
+kerfus = np.append([[base_coords[0], base_coords[1], 0, 0, 0, 0, 0]], kerfus, axis=0)
+
+shelves = np.argwhere(arr == 1)
+entrance = np.argwhere(arr == 2)
+exit = np.argwhere(arr == 3)
+bread = np.argwhere(arr == 4)
+meat = np.argwhere(arr == 5)
+
+fig, ax = plt.subplots()
+
+ax.scatter(points[:, 0], points[:, 1], c='red', s=5)
+for ix in range(kerfus.shape[0] - 1):
+    path = astar_search(arr, tuple(map(int, kerfus[ix, :2])), tuple(map(int, kerfus[ix+1, :2])))
+    path = np.array(path)
+    plt.plot(path[:, 0], path[:, 1], '--', c='#1f77b4')
+ax.scatter(kerfus[:, 0], kerfus[:, 1])
+ax.scatter(shelves[:, 0], shelves[:, 1], c='lightblue', marker='s', s=26)
+ax.scatter(entrance[:, 0], entrance[:, 1], c='green', marker='s', s=26)
+ax.scatter(exit[:, 0], exit[:, 1], c='red', marker='s', s=26)
+ax.scatter(bread[:, 0], bread[:, 1], c='grey', marker='s', s=26)
+ax.scatter(meat[:, 0], meat[:, 1], c='orange', marker='s', s=26)
+
+for i in range(kerfus.shape[0]):
+    plt.annotate(i, tuple(kerfus[i, :2]))
+
+ax.set_axisbelow(True)
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+ax.yaxis.set_minor_locator(MultipleLocator(1))
+ax.set_aspect('equal', adjustable='box')
+ax.set_xlim((-0.5, 55.5))
+ax.set_ylim((28.5, -0.5))
+ax.grid(which='both', linewidth=0.25)
+plt.xticks([])
+plt.yticks([])
+fig.show()
