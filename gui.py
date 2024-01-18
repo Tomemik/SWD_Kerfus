@@ -31,17 +31,17 @@ class MainScreen(QWidget):
 
         self.rsm_button = QPushButton(self)
         self.rsm_button.setStyleSheet("image: url(./grafika/but_rsm.png);"
-                                         "width: 120px;"
-                                         "height: 40px;"
-                                         "background-color: transparent;")
+                                      "width: 120px;"
+                                      "height: 40px;"
+                                      "background-color: transparent;")
         self.rsm_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(2))
         button_layout.addWidget(self.rsm_button)
 
         self.uta_button = QPushButton(self)
         self.uta_button.setStyleSheet("image: url(./grafika/but_uta.png);"
-                                         "width: 120px;"
-                                         "height: 40px;"
-                                         "background-color: transparent;")
+                                      "width: 120px;"
+                                      "height: 40px;"
+                                      "background-color: transparent;")
         self.uta_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(3))
         button_layout.addWidget(self.uta_button)
 
@@ -59,9 +59,9 @@ class MainScreen(QWidget):
 
         self.results_button = QPushButton(self)
         self.results_button.setStyleSheet("image: url(./grafika/but_wyniki.png);"
-                                         "width: 120px;"
-                                         "height: 40px;"
-                                         "background-color: transparent;")
+                                          "width: 120px;"
+                                          "height: 40px;"
+                                          "background-color: transparent;")
         self.results_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(4))
         self.layout.addWidget(self.results_button)
 
@@ -100,7 +100,7 @@ def main():
     stacked_widget.addWidget(screen_uta)
     stacked_widget.addWidget(screen_results)
 
-    main_window.setCentralWidget(stacked_widget)
+    main_window.setCentralWidget(stacked_widget) 
     main_window.setWindowIcon(QIcon(icon_path))
     main_window.show()
     sys.exit(app.exec())

@@ -18,7 +18,11 @@ class ExcelTableScreen(QWidget):
         self.save_button.clicked.connect(self.save_changes)
         self.layout.addWidget(self.save_button)
 
-        self.back_button = QPushButton("WROC")
+        self.back_button = QPushButton(self)
+        self.back_button.setStyleSheet("image: url(./grafika/but_powrot.png);"
+                                         "width: 120px;"
+                                         "height: 40px;"
+                                         "background-color: transparent;")
         self.back_button.clicked.connect(self.go_back)
         self.layout.addWidget(self.back_button)
 
