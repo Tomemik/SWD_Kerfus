@@ -1,10 +1,13 @@
-from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QLabel, QPushButton
+from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QLabel, QPushButton, QFileDialog
 from PyQt6.QtCore import Qt
 import openpyxl
+import pandas as pd
+from data_manager import DataManager
 
 class ExcelTableScreen(QWidget):
-    def __init__(self):
+    def __init__(self, data_manager: DataManager):
         super().__init__()
+        self.data_manager = data_manager
 
         self.layout = QVBoxLayout()
 
@@ -14,53 +17,118 @@ class ExcelTableScreen(QWidget):
         self.table_widget = QTableWidget()
         self.layout.addWidget(self.table_widget)
 
-        self.save_button = QPushButton("Save Changes")
+        self.punkty_file_label = QLabel("Punkty File: ")
+        self.layout.addWidget(self.punkty_file_label)
+
+        self.map_file_label = QLabel("Map File: ")
+        self.layout.addWidget(self.map_file_label)
+
+        self.load_point_button = QPushButton("Ładuj punkty")
+        self.load_point_button.clicked.connect(self.load_point_data)
+        self.layout.addWidget(self.load_point_button)
+
+        self.load_map_button = QPushButton("Ładuj mape")
+        self.load_map_button.clicked.connect(self.load_map_data)
+        self.layout.addWidget(self.load_map_button)
+
+        self.save_button = QPushButton("Zapisz zmiany")
         self.save_button.clicked.connect(self.save_changes)
         self.layout.addWidget(self.save_button)
 
         self.back_button = QPushButton(self)
         self.back_button.setStyleSheet("image: url(./grafika/but_powrot.png);"
-                                         "width: 120px;"
-                                         "height: 40px;"
-                                         "background-color: transparent;")
+                                       "width: 120px;"
+                                       "height: 40px;"
+                                       "background-color: transparent;")
         self.back_button.clicked.connect(self.go_back)
         self.layout.addWidget(self.back_button)
 
-
         self.setLayout(self.layout)
+        self.punkty_file_path = None
+        self.map_file_path = None
+        self.point_df = None
+        self.map_df = None
 
-    def load_excel_data(self):
+    def load_point_data(self):
         try:
-            workbook = openpyxl.load_workbook("punkty.xlsx")
-            sheet = workbook.active
+            file_dialog = QFileDialog()
+            file_path, _ = file_dialog.getOpenFileName(self, "Open Excel File (Punkty)", "", "Excel Files (*.xlsx)")
+            self.punkty_file_path = file_path
 
-            self.table_widget.setRowCount(sheet.max_row)
-            self.table_widget.setColumnCount(sheet.max_column)
+            if file_path:
+                workbook = openpyxl.load_workbook(file_path)
+                sheet = workbook.active
 
-            for row_index, row in enumerate(sheet.iter_rows(values_only=True)):
-                for col_index, value in enumerate(row):
-                    item = QTableWidgetItem(str(value))
-                    self.table_widget.setItem(row_index, col_index, item)
+                self.table_widget.setRowCount(sheet.max_row)
+                self.table_widget.setColumnCount(sheet.max_column)
+
+                data = []
+                for row_index, row in enumerate(sheet.iter_rows(values_only=True)):
+                    row_data = []
+                    for col_index, value in enumerate(row):
+                        item = QTableWidgetItem(str(value))
+                        self.table_widget.setItem(row_index, col_index, item)
+                        row_data.append(str(value))
+                    data.append(row_data)
+
+                # Save data to DataFrame
+                self.point_df = pd.read_excel(self.punkty_file_path, sheet_name='Arkusz1', usecols='B:F', skiprows=0, nrows=100, keep_default_na=False)
+                self.data_manager.set_data("points", self.point_df)
+
+
+                # Update the label with the loaded file name
+                self.punkty_file_label.setText(f"Punkty File: {file_path}")
 
         except Exception as e:
-            print(f"Error loading Excel data: {e}")
+            print(f"Error loading Punkty Excel data: {e}")
 
     def save_changes(self):
         try:
-            workbook = openpyxl.load_workbook("punkty.xlsx")
-            sheet = workbook.active
+            if self.punkty_file_path:
+                workbook = openpyxl.load_workbook(self.punkty_file_path)
+                sheet = workbook.active
 
-            for row in range(self.table_widget.rowCount()):
-                for col in range(self.table_widget.columnCount()):
-                    item = self.table_widget.item(row, col)
-                    if item is not None:
-                        sheet.cell(row=row + 1, column=col + 1, value=item.text())
+                for row in range(self.table_widget.rowCount()):
+                    for col in range(self.table_widget.columnCount()):
+                        item = self.table_widget.item(row, col)
+                        if item is not None:
+                            sheet.cell(row=row + 1, column=col + 1, value=item.text())
 
-            workbook.save("punkty.xlsx")
-            print("Changes saved successfully!")
+                workbook.save(self.punkty_file_path)
+                print(f"Changes saved successfully for Punkty File: {self.punkty_file_path}")
+
+                # Update the DataFrame after saving changes
+                self.load_point_data()
 
         except Exception as e:
-            print(f"Error saving changes to Excel: {e}")
+            print(f"Error saving changes to Punkty Excel: {e}")
+
+    def load_map_data(self):
+        try:
+            file_dialog = QFileDialog()
+            file_path, _ = file_dialog.getOpenFileName(self, "Open Excel File (Map)", "", "Excel Files (*.xlsx)")
+            self.map_file_path = file_path
+
+            if file_path:
+                workbook = openpyxl.load_workbook(file_path)
+                sheet = workbook.active
+
+                data = []
+                for row_index, row in enumerate(sheet.iter_rows(values_only=True)):
+                    row_data = []
+                    for col_index, value in enumerate(row):
+                        row_data.append(str(value))
+                    data.append(row_data)
+
+                # Save data to DataFrame
+                self.map_df = pd.read_excel(self.map_file_path, sheet_name='Arkusz1', usecols='B:BE', skiprows=0, nrows=29)
+                self.data_manager.set_data("map", self.map_df)
+
+                # Update the label with the loaded file name
+                self.map_file_label.setText(f"Map File: {file_path}")
+
+        except Exception as e:
+            print(f"Error loading Map Excel data: {e}")
 
     def go_back(self):
         self.parent().setCurrentIndex(0)

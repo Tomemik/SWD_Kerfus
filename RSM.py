@@ -3,10 +3,18 @@ from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QFormLayout, QDialog
 from PyQt6.QtCore import Qt
 import openpyxl
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import tabulate
+from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
+
+import alg_RSM
+from data_manager import DataManager
 
 class ScreenRSM(QWidget):
-    def __init__(self):
+    def __init__(self, data_manager: DataManager):
         super().__init__()
+        self.data_manager = data_manager
 
         self.layout = QVBoxLayout()
 
@@ -60,7 +68,21 @@ class ScreenRSM(QWidget):
         self.parent().setCurrentIndex(0)
 
     def execute_algorithm(self):
-        print("Executing the algorithm")  # Placeholder for algorithm execution
+        map = self.data_manager.get_data("map")
+        points = self.data_manager.get_data("points")
+        shop = map.values.T
+        arr = shop.copy()
+        points = points.values
+
+        points[:, 2] = -1 * points[:, 2]
+        points[:, 3] = -1 * points[:, 3]
+
+        points_ref = [(x, y) for x, y in points[:, :2]]
+
+        kerfus = alg_RSM.run_rsm(shop, points, [0, 1], points_ref, 5)
+
+        print(kerfus)
+
 
     def show_select_points_dialog(self):
         select_points_dialog = SelectPointsDialog(self)
@@ -86,12 +108,15 @@ class SelectPointsDialog(QDialog):
         load_data_button = QPushButton("Load Data from Excel")
         load_data_button.clicked.connect(self.load_data_from_excel)
 
-        layout.addWidget(load_data_button)
-        layout.addWidget(self.table)
+        save_data_button = QPushButton("Save data")
+        save_data_button.clicked.connect(self.save_data)
 
         self.setLayout(layout)
         self.selected_points = {'class1': set(), 'class2': set()}
 
+        layout.addWidget(load_data_button)
+        layout.addWidget(self.table)
+        layout.addWidget(save_data_button)
 
     def load_data_from_excel(self):
         file_dialog = QFileDialog()
@@ -109,6 +134,9 @@ class SelectPointsDialog(QDialog):
                 self.populate_table(data, sheet.max_column - 1)  # Subtract 1 for skipping the first column
             except Exception as e:
                 print("Error loading data:", str(e))
+
+    def save_data(self):
+        print(self.selected_points)
 
     def populate_table(self, data, max_column):
         # Clear existing table content
@@ -150,8 +178,6 @@ class SelectPointsDialog(QDialog):
                 self.selected_points[class_name].add(item.row())
             else:
                 self.selected_points[class_name].discard(item.row())
-
-            print(self.selected_points)
 
 
 class EnterCustomPointsDialog(QDialog):

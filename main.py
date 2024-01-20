@@ -131,6 +131,8 @@ meat = np.argwhere(arr == 5)
 
 fig, ax = plt.subplots()
 
+print(kerfus)
+
 ax.scatter(points[:, 0], points[:, 1], c='red', s=5)
 for ix in range(kerfus.shape[0] - 1):
     path = astar_search(arr, tuple(map(int, kerfus[ix, :2])), tuple(map(int, kerfus[ix+1, :2])))

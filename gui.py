@@ -8,11 +8,12 @@ import openpyxl
 
 
 import Topsis, RSM, Uta, excel, Results
-
+from data_manager import DataManager
 
 class MainScreen(QWidget):
-    def __init__(self, stacked_widget):
+    def __init__(self, stacked_widget, data_manager: DataManager):
         super().__init__()
+        self.data_manager = data_manager
 
         self.layout = QVBoxLayout()
 
@@ -54,7 +55,7 @@ class MainScreen(QWidget):
                                              "width: 120px;"
                                              "height: 40px;"
                                              "background-color: transparent;")
-        self.show_excel_button.clicked.connect(lambda: self.show_excel_table(stacked_widget))
+        self.show_excel_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(4))
         self.layout.addWidget(self.show_excel_button)
 
         self.results_button = QPushButton(self)
@@ -62,21 +63,12 @@ class MainScreen(QWidget):
                                           "width: 120px;"
                                           "height: 40px;"
                                           "background-color: transparent;")
-        self.results_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(4))
+        self.results_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(5))
         self.layout.addWidget(self.results_button)
 
         self.setLayout(self.layout)
 
         self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-    def show_excel_table(self, stacked_widget):
-        # Create and add ExcelTableScreen to stacked widget
-        excel_table_screen = excel.ExcelTableScreen()
-        stacked_widget.addWidget(excel_table_screen)
-        stacked_widget.setCurrentIndex(stacked_widget.count() - 1)
-
-        # Load Excel data when the screen is shown
-        excel_table_screen.load_excel_data()
 
 def main():
     icon_path = "./grafika/szur.png"
@@ -86,21 +78,25 @@ def main():
     main_window.setWindowTitle("Kerfus")
     main_window.setGeometry(100, 100, 1200, 900)
 
+    data_manager = DataManager()
+
     stacked_widget = QStackedWidget(main_window)
 
-    main_screen = MainScreen(stacked_widget)
-    screen_topsis = Topsis.ScreenTopsis()
-    screen_rsm = RSM.ScreenRSM()
-    screen_uta = Uta.ScreenUTA()
-    screen_results = Results.ScreenResults()
+    main_screen = MainScreen(stacked_widget, data_manager)
+    screen_topsis = Topsis.ScreenTopsis(data_manager)
+    screen_rsm = RSM.ScreenRSM(data_manager)
+    screen_uta = Uta.ScreenUTA(data_manager)
+    screen_excel = excel.ExcelTableScreen(data_manager)
+    screen_results = Results.ScreenResults(data_manager)
 
     stacked_widget.addWidget(main_screen)
     stacked_widget.addWidget(screen_topsis)
     stacked_widget.addWidget(screen_rsm)
     stacked_widget.addWidget(screen_uta)
+    stacked_widget.addWidget(screen_excel)
     stacked_widget.addWidget(screen_results)
 
-    main_window.setCentralWidget(stacked_widget) 
+    main_window.setCentralWidget(stacked_widget)
     main_window.setWindowIcon(QIcon(icon_path))
     main_window.show()
     sys.exit(app.exec())

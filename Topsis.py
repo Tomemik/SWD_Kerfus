@@ -1,10 +1,13 @@
 from PyQt6.QtWidgets import QDialogButtonBox, QVBoxLayout, QLabel, QPushButton, QWidget, QLineEdit, QDialog, QMessageBox, QSpacerItem, QSizePolicy
 from PyQt6.QtGui import QValidator
 from PyQt6.QtCore import Qt
+from data_manager import DataManager
 
 class ScreenTopsis(QWidget):
-    def __init__(self):
+    def __init__(self, data_manager: DataManager):
         super().__init__()
+        self.data_manager = data_manager
+        # ... (rest of your ScreenTopsis code)
 
         self.layout = QVBoxLayout()
 

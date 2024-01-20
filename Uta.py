@@ -1,8 +1,11 @@
 from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget
 
+from data_manager import DataManager
+
 class ScreenUTA(QWidget):
-    def __init__(self):
+    def __init__(self, data_manager: DataManager):
         super().__init__()
+        self.data_manager = data_manager
 
         self.layout = QVBoxLayout()
 
