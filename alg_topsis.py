@@ -103,14 +103,14 @@ def find_best(A, W, search_for_min, points):
     A[:, 2] = np.around(A[:, 2], decimals=3)  # round ci to make it display better
 
     np.set_printoptions(suppress=True)  # display results in non-scientific formatting
-    print("Top 5: ")
+    #print("Top 5: ")
     names = [["x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]]
     ranking = np.append(names, A, axis=0)
-    print(tabulate(ranking[:6], headers='firstrow'))
+    #print(tabulate(ranking[:6], headers='firstrow'))
     # wynik metody zmodyfikowanej - punkt antyidealny to nadir
     # wyswietlam orginalne dane z dodatkowym numerem (kolumna id = numer wiersza w wejściowej tabeli liczony od 1)
     # i obliczoną wagą
-    return A[0]
+    return A[0], ranking[:6]
 
 # code execution
 #find_best(A, W, search_for_min)

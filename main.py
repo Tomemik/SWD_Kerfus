@@ -5,7 +5,7 @@ import openpyxl
 import alg_topsis as top
 from tabulate import tabulate
 import matplotlib.pyplot as plt
-from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
+from matplotlib.ticker import MultipleLocator
 
 
 def manhattan_distance(point1, point2):
@@ -65,17 +65,20 @@ def change_distance(table, distances, point, points_ref):
     return table, distances, points_ref
 
 
-def topsis_n_points(table_original, weights, search_min, points_ref, n):
+def topsis_n_points(table_original, weights, search_min, points_ref, distance_each_other, n):
     table_current = np.copy(table_original)
     distances_current = np.copy(distance_each_other)
     points_ref_current = np.copy(points_ref)
     path = np.array([[0, 0, 0, 0, 0, 0, 0]])
+    choices = [np.zeros((6, 7))]
+
     for _ in range(n):
-        res = top.find_best(table_current[:, 2:], weights, search_min, list(zip(table_current[:, 0], table_current[:, 1])))
+        res, choice = top.find_best(table_current[:, 2:], weights, search_min, list(zip(table_current[:, 0], table_current[:, 1])))
         path = np.concatenate((path, [res]), axis=0)
+        choices = np.concatenate((choices, [choice]), axis=0)
         table_current, distances_current, points_ref_current = change_distance(table_current, distances_current, res[:2], points_ref_current)
 
-    return path[1:]
+    return path[1:], choices[1:]
 
 
 def get_point_from_xlsx(file):
@@ -112,27 +115,28 @@ def get_point_from_xlsx(file):
     return arr, points, points_ref, distance_each_other, base_coords
 
 
-def show_topsis_results(kerfus):
+def topsis_results(points, weights, points_ref, shop_map, distance_each_other, base_coords):
+    kerfus, choices = topsis_n_points(points, weights, [1, 1, 0, 0], points_ref, distance_each_other, 10)
     kerfus_tab = [["lp", "x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]]
 
     for i, el in enumerate(kerfus):
         kerfus_tab = np.append(kerfus_tab, [np.append(i + 1, el)], axis=0)
 
-    print(tabulate(kerfus_tab, headers="firstrow"))
+    #print(tabulate(kerfus_tab, headers="firstrow"))
 
     kerfus = np.append([[base_coords[0], base_coords[1], 0, 0, 0, 0, 0]], kerfus, axis=0)
 
-    shelves = np.argwhere(arr == 1)
-    entrance = np.argwhere(arr == 2)
-    exit = np.argwhere(arr == 3)
-    bread = np.argwhere(arr == 4)
-    meat = np.argwhere(arr == 5)
+    shelves = np.argwhere(shop_map == 1)
+    entrance = np.argwhere(shop_map == 2)
+    exit = np.argwhere(shop_map == 3)
+    bread = np.argwhere(shop_map == 4)
+    meat = np.argwhere(shop_map == 5)
 
     fig, ax = plt.subplots()
 
     ax.scatter(points[:, 0], points[:, 1], c='red', s=5)
     for ix in range(kerfus.shape[0] - 1):
-        path = astar_search(arr, tuple(map(int, kerfus[ix, :2])), tuple(map(int, kerfus[ix + 1, :2])))
+        path = astar_search(shop_map, tuple(map(int, kerfus[ix, :2])), tuple(map(int, kerfus[ix + 1, :2])))
         path = np.array(path)
         plt.plot(path[:, 0], path[:, 1], '--', c='#1f77b4')
     ax.scatter(kerfus[:, 0], kerfus[:, 1])
@@ -154,7 +158,9 @@ def show_topsis_results(kerfus):
     ax.grid(which='both', linewidth=0.25)
     plt.xticks([])
     plt.yticks([])
-    fig.show()
+    ax.tick_params(which='both', length=0)
+
+    return kerfus_tab, choices, fig
 
 
 #print(points)
@@ -162,6 +168,9 @@ def show_topsis_results(kerfus):
 arr, points, points_ref, distance_each_other, base_coords = get_point_from_xlsx('sklep_3.xlsx')
 weights = np.array([0.25, 0.2, 0.3, 0.25])
 
-kerfus = topsis_n_points(points, weights, [1, 1, 0, 0], points_ref, 10)
+kerfus_tab, choices, figure = topsis_results(points, weights, points_ref, arr, distance_each_other, base_coords)
 
-show_topsis_results(kerfus)
+for i, choice in enumerate(choices):
+    print(f"Krok {i+1}:\n", tabulate(choice, headers="firstrow"))
+print(tabulate(kerfus_tab, headers="firstrow"))
+figure.show()
