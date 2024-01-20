@@ -4,8 +4,8 @@ import pandas as pd
 import tabulate
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 
-import main
 import excel
+import a_star
 
 def naiwny_filtracja(X):
     P = []
@@ -157,12 +157,12 @@ def add_distances(shop, points):
     shop[base_coords] = 0
 
     for idx1 in range(points.shape[0]):
-        path = main.astar_search(shop, tuple(points[idx1, :2]), base_coords)
+        path = a_star.astar_search(shop, tuple(points[idx1, :2]), base_coords)
         if path:
             distance_base[idx1] = len(path) - 1
 
         for idx2 in range(idx1, points.shape[0]):
-            path = main.astar_search(shop, tuple(points[idx1, :2]), tuple(points[idx2, :2]))
+            path = a_star.astar_search(shop, tuple(points[idx1, :2]), tuple(points[idx2, :2]))
             if path:
                 distance_each_other[idx1, idx2] = len(path) - 1
 
@@ -220,68 +220,6 @@ def run_rsm(shop, points, selection, points_ref, n):
         best[1], best[3] = best[3], best[1]
         best[1], best[2] = best[2], best[1]
         path = np.concatenate((path, [best]), axis=0)
-        points_current, distances_current, points_ref_current = main.change_distance(points_current, distances_current,
+        points_current, distances_current, points_ref_current = a_star.change_distance(points_current, distances_current,
                                                                                best[1:3], points_ref_current)
     return path
-
-
-"""
-df1 = pd.read_excel('path.xlsx', sheet_name='Arkusz1', usecols='B:BE', skiprows=0, nrows=29)
-shop = df1.values.T
-arr = shop.copy()
-
-df2 = pd.read_excel('punkty.xlsx', sheet_name='Arkusz1', usecols='B:F', skiprows=0, nrows=54, keep_default_na=False)
-points = df2.values
-points[:, 2] = -1 * points[:, 2]
-points[:, 3] = -1 * points[:, 3]
-
-points_ref = [(x, y) for x, y in points[:, :2]]
-
-base_coords = np.argwhere(arr == 6)
-base_coords = tuple(base_coords[0])
-arr[base_coords] = 0
-
-kerfus = run_rsm(shop, points, [0, 1], points_ref, 5)
-
-kerfus = np.delete(kerfus,0, axis=0)
-kerfus = np.delete(kerfus,0, axis=1)
-
-
-kerfus = np.append([[base_coords[0], base_coords[1], 0, 0, 0, 0, 0]], kerfus, axis=0)
-
-print(kerfus)
-
-shelves = np.argwhere(arr == 1)
-entrance = np.argwhere(arr == 2)
-exit = np.argwhere(arr == 3)
-bread = np.argwhere(arr == 4)
-meat = np.argwhere(arr == 5)
-
-fig, ax = plt.subplots()
-
-ax.scatter(points[:, 0], points[:, 1], c='red', s=5)
-for ix in range(kerfus.shape[0] - 1):
-    path = main.astar_search(arr, tuple(map(int, kerfus[ix, :2])), tuple(map(int, kerfus[ix+1, :2])))
-    path = np.array(path)
-    plt.plot(path[:, 0], path[:, 1], '--', c='#1f77b4')
-ax.scatter(kerfus[:, 0], kerfus[:, 1])
-ax.scatter(shelves[:, 0], shelves[:, 1], c='lightblue', marker='s', s=26)
-ax.scatter(entrance[:, 0], entrance[:, 1], c='green', marker='s', s=26)
-ax.scatter(exit[:, 0], exit[:, 1], c='red', marker='s', s=26)
-ax.scatter(bread[:, 0], bread[:, 1], c='grey', marker='s', s=26)
-ax.scatter(meat[:, 0], meat[:, 1], c='orange', marker='s', s=26)
-
-for i in range(kerfus.shape[0]):
-    plt.annotate(i, tuple(kerfus[i, :2]))
-
-ax.set_axisbelow(True)
-ax.xaxis.set_minor_locator(MultipleLocator(1))
-ax.yaxis.set_minor_locator(MultipleLocator(1))
-ax.set_aspect('equal', adjustable='box')
-ax.set_xlim((-0.5, 55.5))
-ax.set_ylim((28.5, -0.5))
-ax.grid(which='both', linewidth=0.25)
-plt.xticks([])
-plt.yticks([])
-fig.show()
-"""

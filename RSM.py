@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget, QCheckBox
+from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget, QCheckBox, QHBoxLayout
 from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QFormLayout, QDialog, QHeaderView, QLineEdit, QFileDialog
 from PyQt6.QtCore import Qt
 import openpyxl
@@ -7,22 +7,35 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tabulate
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 import alg_RSM
 from data_manager import DataManager
+import a_star
+
+
+class MatplotlibWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.canvas = FigureCanvas(plt.figure())
+        layout = QVBoxLayout()
+        layout.addWidget(self.canvas)
+        self.setLayout(layout)
+
 
 class ScreenRSM(QWidget):
     def __init__(self, data_manager: DataManager):
         super().__init__()
         self.data_manager = data_manager
 
-        self.layout = QVBoxLayout()
+        self.layout = QHBoxLayout()  # Use QHBoxLayout instead of QVBoxLayout
 
-        self.label = QLabel("RSM")
-        self.layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignHCenter)
+        # Left part (1/4th of the width)
+        left_layout = QVBoxLayout()
 
         self.class_type_checkbox = QCheckBox("Używaj klas użytkownika")
-        self.layout.addWidget(self.class_type_checkbox)
+        left_layout.addWidget(self.class_type_checkbox)
 
         self.execute_button = QPushButton(self)
         self.execute_button.setStyleSheet("image: url(./grafika/but_rsm.png);"
@@ -31,7 +44,7 @@ class ScreenRSM(QWidget):
                                          "margin: 0px;"
                                          "background-color: transparent")
         self.execute_button.clicked.connect(self.execute_algorithm)
-        self.layout.addWidget(self.execute_button)
+        left_layout.addWidget(self.execute_button)
 
         self.select_points_button = QPushButton("Wybierz Klasy")
         self.select_points_button.setStyleSheet(
@@ -40,7 +53,7 @@ class ScreenRSM(QWidget):
                                          "margin: 0px;"
                                          )
         self.select_points_button.clicked.connect(self.show_select_points_dialog)
-        self.layout.addWidget(self.select_points_button)
+        left_layout.addWidget(self.select_points_button)
 
         self.enter_custom_points_button = QPushButton("Stwórz decyzje")
         self.enter_custom_points_button.setStyleSheet(
@@ -49,7 +62,7 @@ class ScreenRSM(QWidget):
                                          "margin: 0px;"
                                          )
         self.enter_custom_points_button.clicked.connect(self.show_enter_custom_points_dialog)
-        self.layout.addWidget(self.enter_custom_points_button)
+        left_layout.addWidget(self.enter_custom_points_button)
 
         self.back_button = QPushButton(self)
         self.back_button.setStyleSheet("image: url(./grafika/but_powrot.png);"
@@ -58,7 +71,14 @@ class ScreenRSM(QWidget):
                                          "margin: 0px;"
                                          "background-color: transparent")
         self.back_button.clicked.connect(self.go_back)
-        self.layout.addWidget(self.back_button)
+        left_layout.addWidget(self.back_button)
+
+        # Set left part width to 1/4th of the main window width
+        self.layout.addLayout(left_layout, 1)
+
+        # Right part (Matplotlib plot)
+        self.matplotlib_widget = MatplotlibWidget(self.layout.parentWidget())  # Use the parent widget as the parent for MatplotlibWidget
+        self.layout.addWidget(self.matplotlib_widget, 3)  # Set right part width to 3/4th of the main window width
 
         self.setLayout(self.layout)
 
@@ -68,11 +88,11 @@ class ScreenRSM(QWidget):
         self.parent().setCurrentIndex(0)
 
     def execute_algorithm(self):
-        map = self.data_manager.get_data("map")
-        points = self.data_manager.get_data("points")
-        shop = map.values.T
+        map_data = self.data_manager.get_data("map").copy()
+        points_data = self.data_manager.get_data("points").copy()
+        shop = map_data.values.T
         arr = shop.copy()
-        points = points.values
+        points = points_data.values
 
         points[:, 2] = -1 * points[:, 2]
         points[:, 3] = -1 * points[:, 3]
@@ -81,8 +101,49 @@ class ScreenRSM(QWidget):
 
         kerfus = alg_RSM.run_rsm(shop, points, [0, 1], points_ref, 5)
 
-        print(kerfus)
+        base_coords = np.argwhere(arr == 6)
+        base_coords = tuple(base_coords[0])
+        arr[base_coords] = 0
 
+        kerfus = np.delete(kerfus, 0, axis=0)
+        kerfus = np.delete(kerfus, 0, axis=1)
+
+        kerfus = np.append([[base_coords[0], base_coords[1], 0, 0, 0, 0, 0]], kerfus, axis=0)
+
+        ax = self.matplotlib_widget.canvas.figure.add_subplot(111)
+
+        shelves = np.argwhere(arr == 1)
+        entrance = np.argwhere(arr == 2)
+        exit = np.argwhere(arr == 3)
+        bread = np.argwhere(arr == 4)
+        meat = np.argwhere(arr == 5)
+
+        ax.scatter(points[:, 0], points[:, 1], c='red', s=5)
+        for ix in range(kerfus.shape[0] - 1):
+            path = a_star.astar_search(arr, tuple(map(int, kerfus[ix, :2])), tuple(map(int, kerfus[ix + 1, :2])))
+            path = np.array(path)
+            ax.plot(path[:, 0], path[:, 1], '--', c='#1f77b4')
+        ax.scatter(kerfus[:, 0], kerfus[:, 1])
+        ax.scatter(shelves[:, 0], shelves[:, 1], c='lightblue', marker='s', s=26)
+        ax.scatter(entrance[:, 0], entrance[:, 1], c='green', marker='s', s=26)
+        ax.scatter(exit[:, 0], exit[:, 1], c='red', marker='s', s=26)
+        ax.scatter(bread[:, 0], bread[:, 1], c='grey', marker='s', s=26)
+        ax.scatter(meat[:, 0], meat[:, 1], c='orange', marker='s', s=26)
+
+        for i in range(kerfus.shape[0]):
+            ax.annotate(i, tuple(kerfus[i, :2]))
+
+        ax.set_axisbelow(True)
+        ax.xaxis.set_minor_locator(MultipleLocator(1))
+        ax.yaxis.set_minor_locator(MultipleLocator(1))
+        ax.set_aspect('equal', adjustable='box')
+        ax.set_xlim((-0.5, 55.5))
+        ax.set_ylim((28.5, -0.5))
+        ax.grid(which='both', linewidth=0.25)
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        self.matplotlib_widget.canvas.draw()
 
     def show_select_points_dialog(self):
         select_points_dialog = SelectPointsDialog(self)
