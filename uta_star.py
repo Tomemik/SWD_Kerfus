@@ -62,7 +62,7 @@ def ranking(fun, p, us):
                 elif us[i][j][0] >= p[k][i] >= us[i][j+1][0]:
                     val.append(fun[i][-j -1][0] * p[k][i] + fun[i][-j -1][1])
 
-        rank.append(val)
+        rank.append(np.sum(val))
     return np.array(rank)
 
 
@@ -74,15 +74,15 @@ points = np.array([[5.1, 20, 10499],
 
 minmax = [1, 1, 0] # 1- max, 0- min
 
-limits = best(points, minmax)
+limits = best(points, minmax) 
 print(limits)
 
-user_steps_count = [2, 2, 3]
+user_steps_count = [2, 2, 3] # użytkowinik wybiera na ile chce podizelić przedziałów każdy parametr
 
-default_steps = steps(limits, user_steps_count)
+default_steps = steps(limits, user_steps_count) # przedziały z wagami wygenerowane automatycznie pokazujemy użytkownikowi
 print(default_steps)
 
-user_steps = default_steps
+user_steps = default_steps # przedziały z wagami zmienione przez użytkownika
 user_steps[0][1][1] = 0.18
 user_steps[1][1][1] = 0.18
 user_steps[2][1][1] = 0.28
