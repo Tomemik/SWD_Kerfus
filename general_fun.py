@@ -64,7 +64,7 @@ def path_plot(ranking, shop_map, points, base_coords):
     bread = np.argwhere(shop_map == 4)
     meat = np.argwhere(shop_map == 5)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(8,8))
 
     ax.scatter(points[:, 0], points[:, 1], c='red', s=5)
     for ix in range(ranking.shape[0] - 1):

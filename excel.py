@@ -27,10 +27,6 @@ class ExcelTableScreen(QWidget):
         self.load_point_button.clicked.connect(self.load_point_data)
         self.layout.addWidget(self.load_point_button)
 
-        self.load_map_button = QPushButton("Ładuj mape")
-        self.load_map_button.clicked.connect(self.load_map_data)
-        self.layout.addWidget(self.load_map_button)
-
         self.save_button = QPushButton("Zapisz zmiany")
         self.save_button.clicked.connect(self.save_changes)
         self.layout.addWidget(self.save_button)
@@ -57,13 +53,17 @@ class ExcelTableScreen(QWidget):
 
             if file_path:
                 workbook = openpyxl.load_workbook(file_path)
-                sheet = workbook.active
 
-                self.table_widget.setRowCount(sheet.max_row)
-                self.table_widget.setColumnCount(sheet.max_column)
+                # Assuming you have two sheets named 'Points' and 'Map' in the Excel file
+                point_sheet = workbook['punkty']
+                map_sheet = workbook['mapa']
+
+                # Load Points data
+                self.table_widget.setRowCount(point_sheet.max_row)
+                self.table_widget.setColumnCount(point_sheet.max_column)
 
                 data = []
-                for row_index, row in enumerate(sheet.iter_rows(values_only=True)):
+                for row_index, row in enumerate(point_sheet.iter_rows(values_only=True)):
                     row_data = []
                     for col_index, value in enumerate(row):
                         item = QTableWidgetItem(str(value))
@@ -71,10 +71,11 @@ class ExcelTableScreen(QWidget):
                         row_data.append(str(value))
                     data.append(row_data)
 
-                # Save data to DataFrame
-                self.point_df = pd.read_excel(self.punkty_file_path, sheet_name='Arkusz1', usecols='B:F', skiprows=0, nrows=100, keep_default_na=False)
+                self.point_df = pd.read_excel(self.punkty_file_path, sheet_name='punkty', usecols='B:F', skiprows=0, nrows=100, keep_default_na=False)
                 self.data_manager.set_data("points", self.point_df)
 
+                self.map_df = pd.read_excel(self.punkty_file_path, sheet_name='mapa', usecols='B:BE', skiprows=0, nrows=29)
+                self.data_manager.set_data("map", self.map_df)
 
                 # Update the label with the loaded file name
                 self.punkty_file_label.setText(f"Punkty File: {file_path}")
@@ -102,33 +103,6 @@ class ExcelTableScreen(QWidget):
 
         except Exception as e:
             print(f"Error saving changes to Punkty Excel: {e}")
-
-    def load_map_data(self):
-        try:
-            file_dialog = QFileDialog()
-            file_path, _ = file_dialog.getOpenFileName(self, "Open Excel File (Map)", "", "Excel Files (*.xlsx)")
-            self.map_file_path = file_path
-
-            if file_path:
-                workbook = openpyxl.load_workbook(file_path)
-                sheet = workbook.active
-
-                data = []
-                for row_index, row in enumerate(sheet.iter_rows(values_only=True)):
-                    row_data = []
-                    for col_index, value in enumerate(row):
-                        row_data.append(str(value))
-                    data.append(row_data)
-
-                # Save data to DataFrame
-                self.map_df = pd.read_excel(self.map_file_path, sheet_name='Arkusz1', usecols='B:BE', skiprows=0, nrows=29)
-                self.data_manager.set_data("map", self.map_df)
-
-                # Update the label with the loaded file name
-                self.map_file_label.setText(f"Map File: {file_path}")
-
-        except Exception as e:
-            print(f"Error loading Map Excel data: {e}")
 
     def go_back(self):
         self.parent().setCurrentIndex(0)

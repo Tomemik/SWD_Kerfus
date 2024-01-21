@@ -21,6 +21,7 @@ class MatplotlibWidget(QWidget):
         self.canvas = FigureCanvas(plt.figure())
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
+        self.canvas.figure.patch.set_facecolor("black")
         self.setLayout(layout)
 
 

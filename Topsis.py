@@ -7,15 +7,28 @@ import numpy as np
 
 from data_manager import DataManager
 import alg_topsis
+import alg_RSM
 
 
 class MatplotlibWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.canvas = FigureCanvas(plt.figure())
+        self.canvas = FigureCanvas(plt.figure(figsize=(4, 4)))  # Adjust figsize as needed
+        self.canvas.figure.patch.set_facecolor("black")
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
         self.setLayout(layout)
+
+    def update_figure(self, new_ax):
+        # Clear the current figure and add the new axes
+        self.canvas.figure.clf()
+        self.canvas.figure.subplots_adjust(left=0, bottom=0, right=1, top=1)
+        self.canvas.figure = new_ax.figure
+        self.canvas.draw_idle()
+
+        self.canvas.figure.patch.set_facecolor("black")
+
+        self.repaint()
 
 
 class KerfusTableModel(QAbstractTableModel):
@@ -80,6 +93,7 @@ class ScreenTopsis(QWidget):
         self.kerfus_table = QTableView()
         right_layout.addWidget(self.kerfus_table)
 
+
         self.layout.addLayout(left_layout, 1)
         self.layout.addLayout(right_layout, 3)
 
@@ -87,6 +101,7 @@ class ScreenTopsis(QWidget):
         self.setLayout(self.layout)
 
         self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        right_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def go_back(self):
         self.parent().setCurrentIndex(0)
@@ -104,23 +119,20 @@ class ScreenTopsis(QWidget):
             base_coords = tuple(base_coords[0])
             arr[base_coords] = 0
 
-            points, distance = alg_topsis.add_distances(shop.copy(), points.copy())
+            points, distance = alg_RSM.add_distances(shop.copy(), points.copy())
             points_ref = [(x, y) for x, y in points[:, :2]]
 
-            ax = self.matplotlib_widget.canvas.figure.add_subplot(111)
-
             # Pass the MatplotlibWidget instance to the topsis_results function
-            kerfus_tab, choices, ax = alg_topsis.topsis_results(points.copy(), self.weights, points_ref.copy(), arr.copy(), distance.copy(), base_coords, ax)
+            kerfus_tab, choices, new_ax = alg_topsis.topsis_results(points.copy(), self.weights, points_ref.copy(), arr.copy(), distance.copy(), base_coords)
 
-            self.matplotlib_widget.canvas.draw()
+            # Update the MatplotlibWidget with the new figure
+            self.matplotlib_widget.update_figure(new_ax)
 
             model = KerfusTableModel(kerfus_tab)
             self.kerfus_table.setModel(model)
 
-            print(kerfus_tab)
-
-        except Exception as e:
-            print(str(e))
+        except:
+            pass
 
     def show_weight_input_dialog(self):
         try:
