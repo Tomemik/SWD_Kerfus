@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QPushButton, QWidget, QLabel, QStackedWidget, QHBoxLayout, QTableWidgetItem
 from PyQt6.QtCore import Qt, QSize
@@ -10,17 +12,16 @@ import openpyxl
 import Topsis, RSM, Uta, excel, Results
 from data_manager import DataManager
 
+
 class MainScreen(QWidget):
     def __init__(self, stacked_widget, data_manager: DataManager):
         super().__init__()
         self.data_manager = data_manager
 
-        self.layout = QVBoxLayout()
+        self.layout = QHBoxLayout()
 
-        self.label = QLabel("Main Screen")
-        self.layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignHCenter)
-
-        button_layout = QHBoxLayout()
+        right_layout = QVBoxLayout()
+        left_layout = QVBoxLayout()
 
         self.topsis_button = QPushButton(self)
         self.topsis_button.setStyleSheet("image: url(./grafika/but_topsis.png);"
@@ -28,7 +29,7 @@ class MainScreen(QWidget):
                                          "height: 40px;"
                                          "background-color: transparent;")
         self.topsis_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(1))
-        button_layout.addWidget(self.topsis_button)
+        left_layout.addWidget(self.topsis_button)
 
         self.rsm_button = QPushButton(self)
         self.rsm_button.setStyleSheet("image: url(./grafika/but_rsm.png);"
@@ -36,7 +37,7 @@ class MainScreen(QWidget):
                                       "height: 40px;"
                                       "background-color: transparent;")
         self.rsm_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(2))
-        button_layout.addWidget(self.rsm_button)
+        left_layout.addWidget(self.rsm_button)
 
         self.uta_button = QPushButton(self)
         self.uta_button.setStyleSheet("image: url(./grafika/but_uta.png);"
@@ -44,11 +45,7 @@ class MainScreen(QWidget):
                                       "height: 40px;"
                                       "background-color: transparent;")
         self.uta_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(3))
-        button_layout.addWidget(self.uta_button)
-
-        button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.layout.addLayout(button_layout)
+        left_layout.addWidget(self.uta_button)
 
         self.show_excel_button = QPushButton(self)
         self.show_excel_button.setStyleSheet("image: url(./grafika/but_dane.png);"
@@ -56,7 +53,7 @@ class MainScreen(QWidget):
                                              "height: 40px;"
                                              "background-color: transparent;")
         self.show_excel_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(4))
-        self.layout.addWidget(self.show_excel_button)
+        left_layout.addWidget(self.show_excel_button)
 
         self.results_button = QPushButton(self)
         self.results_button.setStyleSheet("image: url(./grafika/but_wyniki.png);"
@@ -64,16 +61,29 @@ class MainScreen(QWidget):
                                           "height: 40px;"
                                           "background-color: transparent;")
         self.results_button.clicked.connect(lambda: stacked_widget.setCurrentIndex(5))
-        self.layout.addWidget(self.results_button)
+        left_layout.addWidget(self.results_button)
+
+        self.layout.addLayout(left_layout, 1)
+        self.layout.addLayout(right_layout, 3)
 
         self.setLayout(self.layout)
-
         self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+
 
 def main():
     icon_path = "./grafika/szur.png"
-    app = QApplication(sys.argv)
 
+    tlo = """
+        QMainWindow {
+            background-image: url(./grafika/main.png);
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+    """
+
+    app = QApplication(sys.argv)
+    app.setStyleSheet(tlo)
     main_window = QMainWindow()
     main_window.setWindowTitle("Kerfus")
     main_window.setGeometry(100, 100, 1200, 900)
