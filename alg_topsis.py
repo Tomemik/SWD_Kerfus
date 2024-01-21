@@ -131,7 +131,7 @@ def topsis_n_points(table_original, weights, search_min, points_ref, distance_ea
 
     return path[1:], choices[1:]
 
-def topsis_results(points, weights, points_ref, shop_map, distance_each_other, base_coords):
+def topsis_results(points, weights, points_ref, shop_map, distance_each_other, base_coords, ax):
     kerfus, choices = topsis_n_points(points, weights, [1, 1, 0, 0], points_ref, distance_each_other, 10)
     kerfus_tab = [["lp", "x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]]
 
@@ -148,13 +148,11 @@ def topsis_results(points, weights, points_ref, shop_map, distance_each_other, b
     bread = np.argwhere(shop_map == 4)
     meat = np.argwhere(shop_map == 5)
 
-    fig, ax = plt.subplots()
-
     ax.scatter(points[:, 0], points[:, 1], c='red', s=5)
     for ix in range(kerfus.shape[0] - 1):
         path = astar_search(shop_map, tuple(map(int, kerfus[ix, :2])), tuple(map(int, kerfus[ix + 1, :2])))
         path = np.array(path)
-        plt.plot(path[:, 0], path[:, 1], '--', c='#1f77b4')
+        ax.plot(path[:, 0], path[:, 1], '--', c='#1f77b4')
     ax.scatter(kerfus[:, 0], kerfus[:, 1])
     ax.scatter(shelves[:, 0], shelves[:, 1], c='lightblue', marker='s', s=26)
     ax.scatter(entrance[:, 0], entrance[:, 1], c='green', marker='s', s=26)
@@ -163,7 +161,7 @@ def topsis_results(points, weights, points_ref, shop_map, distance_each_other, b
     ax.scatter(meat[:, 0], meat[:, 1], c='orange', marker='s', s=26)
 
     for i in range(kerfus.shape[0]):
-        plt.annotate(i, tuple(kerfus[i, :2]))
+        ax.annotate(i, tuple(kerfus[i, :2]))
 
     ax.set_axisbelow(True)
     ax.xaxis.set_minor_locator(MultipleLocator(1))
@@ -176,4 +174,29 @@ def topsis_results(points, weights, points_ref, shop_map, distance_each_other, b
     plt.yticks([])
     ax.tick_params(which='both', length=0)
 
-    return kerfus_tab, choices, fig
+    return kerfus_tab, choices, ax
+
+def add_distances(shop, points):
+    distance_each_other = np.zeros((points.shape[0], points.shape[0]))
+    distance_base = np.zeros(points.shape[0])
+
+    base_coords = np.argwhere(shop == 6)
+    base_coords = tuple(base_coords[0])
+    shop[base_coords] = 0
+
+    for idx1 in range(points.shape[0]):
+        path = astar_search(shop, tuple(points[idx1, :2]), base_coords)
+        if path:
+            distance_base[idx1] = len(path) - 1
+
+        for idx2 in range(idx1, points.shape[0]):
+            path = astar_search(shop, tuple(points[idx1, :2]), tuple(points[idx2, :2]))
+            if path:
+                distance_each_other[idx1, idx2] = len(path) - 1
+
+
+    distance_each_other = distance_each_other + distance_each_other.T
+    distance_base = np.resize(distance_base, (points.shape[0], 1))
+
+    points = np.concatenate((points, distance_base), axis=1)
+    return points, distance_each_other

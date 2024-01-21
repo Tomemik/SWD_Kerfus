@@ -99,7 +99,7 @@ class ScreenRSM(QWidget):
 
         points_ref = [(x, y) for x, y in points[:, :2]]
 
-        kerfus = alg_RSM.run_rsm(shop, points, [0, 1], points_ref, 5)
+        kerfus = alg_RSM.run_rsm(shop, points, [0, 1], points_ref, 9)
 
         base_coords = np.argwhere(arr == 6)
         base_coords = tuple(base_coords[0])

@@ -1,19 +1,50 @@
-from PyQt6.QtWidgets import QDialogButtonBox, QVBoxLayout, QLabel, QPushButton, QWidget, QLineEdit, QDialog, QMessageBox, QSpacerItem, QSizePolicy
-from PyQt6.QtGui import QValidator
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QDialogButtonBox, QVBoxLayout, QLabel, QPushButton, QWidget, QLineEdit, QDialog, QTableWidget, QTableWidgetItem, QHeaderView, QSizePolicy, QHBoxLayout, QTableView
+from PyQt6.QtGui import QValidator, QStandardItemModel, QStandardItem
+from PyQt6.QtCore import Qt, QAbstractTableModel
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import numpy as np
+
 from data_manager import DataManager
+import alg_topsis
+
+
+class MatplotlibWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.canvas = FigureCanvas(plt.figure())
+        layout = QVBoxLayout()
+        layout.addWidget(self.canvas)
+        self.setLayout(layout)
+
+
+class KerfusTableModel(QAbstractTableModel):
+    def __init__(self, kerfus_tab, parent=None):
+        super().__init__(parent)
+        self.data = kerfus_tab
+
+    def rowCount(self, parent):
+        return len(self.data)
+
+    def columnCount(self, parent):
+        return len(self.data[0])
+
+    def data(self, index, role):
+        if role == Qt.ItemDataRole.DisplayRole:
+            return str(self.data[index.row()][index.column()])
+        return None
+
 
 class ScreenTopsis(QWidget):
     def __init__(self, data_manager: DataManager):
         super().__init__()
         self.data_manager = data_manager
-        # ... (rest of your ScreenTopsis code)
 
-        self.layout = QVBoxLayout()
+        self.weights = np.array([0.25, 0.2, 0.3, 0.25])
+        self.layout = QHBoxLayout()
 
-        self.label = QLabel("TOPSIS")
-        self.layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignHCenter)
-
+        right_layout = QVBoxLayout()
+        left_layout = QVBoxLayout()
 
         self.execute_button = QPushButton(self)
         self.execute_button.setStyleSheet("image: url(./grafika/but_topsis.png);"
@@ -21,10 +52,18 @@ class ScreenTopsis(QWidget):
                                          "height: 40px;"
                                          "margin: 0px;"
                                          "background-color: transparent")
-        self.execute_button.clicked.connect(self.show_weight_input_dialog)
-        self.layout.addWidget(self.execute_button)
+        self.execute_button.clicked.connect(self.run_topsis)
+        left_layout.addWidget(self.execute_button)
 
-        spacer = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.execute_button = QPushButton('wagi')
+        self.execute_button.setStyleSheet(""
+                                         "width: 120px;"
+                                         "height: 40px;"
+                                         "margin: 0px;"
+                                         "background-color: transparent")
+        self.execute_button.clicked.connect(self.show_weight_input_dialog)
+        left_layout.addWidget(self.execute_button)
+
 
         self.back_button = QPushButton(self)
         self.back_button.setStyleSheet("image: url(./grafika/but_powrot.png);"
@@ -33,7 +72,16 @@ class ScreenTopsis(QWidget):
                                          "margin: 0px;"
                                          "background-color: transparent")
         self.back_button.clicked.connect(self.go_back)
-        self.layout.addWidget(self.back_button)
+        left_layout.addWidget(self.back_button)
+
+        self.matplotlib_widget = MatplotlibWidget(self.layout.parentWidget())
+        right_layout.addWidget(self.matplotlib_widget)
+
+        self.kerfus_table = QTableView()
+        right_layout.addWidget(self.kerfus_table)
+
+        self.layout.addLayout(left_layout, 1)
+        self.layout.addLayout(right_layout, 3)
 
 
         self.setLayout(self.layout)
@@ -42,6 +90,37 @@ class ScreenTopsis(QWidget):
 
     def go_back(self):
         self.parent().setCurrentIndex(0)
+
+
+    def run_topsis(self):
+        try:
+            map_data = self.data_manager.get_data("map").copy()
+            points_data = self.data_manager.get_data("points").copy()
+            shop = map_data.values.T
+            arr = shop.copy()
+            points = points_data.values
+
+            base_coords = np.argwhere(arr == 6)
+            base_coords = tuple(base_coords[0])
+            arr[base_coords] = 0
+
+            points, distance = alg_topsis.add_distances(shop.copy(), points.copy())
+            points_ref = [(x, y) for x, y in points[:, :2]]
+
+            ax = self.matplotlib_widget.canvas.figure.add_subplot(111)
+
+            # Pass the MatplotlibWidget instance to the topsis_results function
+            kerfus_tab, choices, ax = alg_topsis.topsis_results(points.copy(), self.weights, points_ref.copy(), arr.copy(), distance.copy(), base_coords, ax)
+
+            self.matplotlib_widget.canvas.draw()
+
+            model = KerfusTableModel(kerfus_tab)
+            self.kerfus_table.setModel(model)
+
+            print(kerfus_tab)
+
+        except Exception as e:
+            print(str(e))
 
     def show_weight_input_dialog(self):
         try:
@@ -54,6 +133,7 @@ class ScreenTopsis(QWidget):
 
                 if sum(weights) == 1:
                     print("Weights:", weights)
+                    self.weights = weights
                     
                 else:
                     print("Error: The sum of weights must equal 1.")
