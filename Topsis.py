@@ -112,14 +112,9 @@ class ScreenTopsis(QWidget):
             map_data = self.data_manager.get_data("map").copy()
             points_data = self.data_manager.get_data("points").copy()
             shop = map_data.values.T
-            arr = shop.copy()
             points = points_data.values
 
-            base_coords = np.argwhere(arr == 6)
-            base_coords = tuple(base_coords[0])
-            arr[base_coords] = 0
-
-            points, distance = alg_RSM.add_distances(shop.copy(), points.copy())
+            arr, points, distance, base_coords = alg_RSM.add_distances(shop.copy(), points.copy())
             points_ref = [(x, y) for x, y in points[:, :2]]
 
             # Pass the MatplotlibWidget instance to the topsis_results function

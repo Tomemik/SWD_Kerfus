@@ -171,7 +171,7 @@ def add_distances(shop, points):
     distance_base = np.resize(distance_base, (points.shape[0], 1))
 
     points = np.concatenate((points, distance_base), axis=1)
-    return points, distance_each_other
+    return shop, points, distance_each_other, base_coords,
 
 def get_classes(points):
     A = np.array(points).astype(float)
