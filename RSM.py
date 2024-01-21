@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget, QCheckBox, QHBoxLayout
+from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget, QCheckBox, QHBoxLayout, QTableView
 from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QFormLayout, QDialog, QHeaderView, QLineEdit, QFileDialog
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QAbstractTableModel
 import openpyxl
 import pandas as pd
 import numpy as np
@@ -24,6 +24,23 @@ class MatplotlibWidget(QWidget):
         self.setLayout(layout)
 
 
+class KerfusTableModel(QAbstractTableModel):
+    def __init__(self, kerfus_tab, parent=None):
+        super().__init__(parent)
+        self.data = kerfus_tab
+
+    def rowCount(self, parent):
+        return len(self.data)
+
+    def columnCount(self, parent):
+        return len(self.data[0])
+
+    def data(self, index, role):
+        if role == Qt.ItemDataRole.DisplayRole:
+            return str(self.data[index.row()][index.column()])
+        return None
+
+
 class ScreenRSM(QWidget):
     def __init__(self, data_manager: DataManager):
         super().__init__()
@@ -31,7 +48,7 @@ class ScreenRSM(QWidget):
 
         self.layout = QHBoxLayout()  # Use QHBoxLayout instead of QVBoxLayout
 
-        # Left part (1/4th of the width)
+        right_layout = QVBoxLayout()
         left_layout = QVBoxLayout()
 
         self.class_type_checkbox = QCheckBox("Używaj klas użytkownika")
@@ -74,11 +91,16 @@ class ScreenRSM(QWidget):
         left_layout.addWidget(self.back_button)
 
         # Set left part width to 1/4th of the main window width
-        self.layout.addLayout(left_layout, 1)
 
         # Right part (Matplotlib plot)
         self.matplotlib_widget = MatplotlibWidget(self.layout.parentWidget())  # Use the parent widget as the parent for MatplotlibWidget
-        self.layout.addWidget(self.matplotlib_widget, 3)  # Set right part width to 3/4th of the main window width
+        right_layout.addWidget(self.matplotlib_widget)  # Set right part width to 3/4th of the main window width
+
+        self.kerfus_table = QTableView()
+        right_layout.addWidget(self.kerfus_table)
+
+        self.layout.addLayout(left_layout, 1)
+        self.layout.addLayout(right_layout, 3)
 
         self.setLayout(self.layout)
 
@@ -108,7 +130,19 @@ class ScreenRSM(QWidget):
         kerfus = np.delete(kerfus, 0, axis=0)
         kerfus = np.delete(kerfus, 0, axis=1)
 
+        kerfus2 = kerfus.copy()
+        kerfus2[:, 3] = -1 * kerfus2[:, 3]
+        kerfus2[:, 4] = -1 * kerfus2[:, 4]
+
         kerfus = np.append([[base_coords[0], base_coords[1], 0, 0, 0, 0, 0]], kerfus, axis=0)
+
+
+        kerfus_tab = [["lp", "x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]]
+
+        for i, el in enumerate(kerfus2):
+            kerfus_tab = np.append(kerfus_tab, [np.append(i + 1, el)], axis=0)
+
+        print(kerfus_tab)
 
         ax = self.matplotlib_widget.canvas.figure.add_subplot(111)
 
@@ -144,6 +178,9 @@ class ScreenRSM(QWidget):
         ax.set_yticks([])
 
         self.matplotlib_widget.canvas.draw()
+
+        model = KerfusTableModel(kerfus_tab)
+        self.kerfus_table.setModel(model)
 
     def show_select_points_dialog(self):
         select_points_dialog = SelectPointsDialog(self)

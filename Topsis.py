@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QDialogButtonBox, QVBoxLayout, QLabel, QPushButton, QWidget, QLineEdit, QDialog, QTableWidget, QTableWidgetItem, QHeaderView, QSizePolicy, QHBoxLayout, QTableView
+from PyQt6.QtWidgets import QDialogButtonBox, QVBoxLayout, QLabel, QPushButton, QWidget, QLineEdit, QDialog, QTableWidget, QTableWidgetItem, QHeaderView, QSizePolicy, QHBoxLayout, QTableView, QMessageBox
 from PyQt6.QtGui import QValidator, QStandardItemModel, QStandardItem
 from PyQt6.QtCore import Qt, QAbstractTableModel
 import matplotlib.pyplot as plt
