@@ -1,4 +1,8 @@
 import numpy as np
+from general_fun import get_point_from_xlsx, path_plot, change_distance
+import alg_topsis
+from tabulate import tabulate
+
 
 def best(a, mm):
     ideal = []
@@ -60,44 +64,70 @@ def ranking(fun, p, us):
                 if us[i][j][0] <= p[k][i] <= us[i][j+1][0]:
                     val.append(fun[i][j][0] * p[k][i] + fun[i][j][1])
                 elif us[i][j][0] >= p[k][i] >= us[i][j+1][0]:
-                    val.append(fun[i][-j -1][0] * p[k][i] + fun[i][-j -1][1])
+                    val.append(fun[i][-j - 1][0] * p[k][i] + fun[i][-j -1][1])
 
         rank.append(np.sum(val))
     return np.array(rank)
 
 
+def uta_n_points(points, user_steps, points_ref, distance_each_other, usability, n):
+    table_current = np.copy(points)
+    distances_current = np.copy(distance_each_other)
+    points_ref_current = np.copy(points_ref)
+    path = np.array([[0, 0, 0, 0, 0, 0, 0]])
+    choices = [np.zeros((6, 7))]
 
-points = np.array([[5.1, 20, 10499],
-                   [3.1, 17, 4049],
-                   [4.5, 4, 4549],
-                   [3.7, 9.5, 2699]])
+    for _ in range(n):
+        rank = np.resize(ranking(usability, table_current[:, 2:], user_steps), (len(points_ref_current), 1))
+        choice = np.insert(table_current, [2], rank, axis=1)
+        choice = choice[choice[:, 2].argsort()[::-1]]
+        choice = choice[:5]
+        res = choice[0]
+        path = np.append(path, [res], axis=0)
+        choices = np.append(choices,
+            [np.append([["x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]], choice, axis=0)],
+            axis=0)
 
-minmax = [1, 1, 0] # 1- max, 0- min
+        table_current, distances_current, points_ref_current = change_distance(table_current, distances_current,
+                                                                               res[:2], points_ref_current)
 
-limits = best(points, minmax) 
-print(limits)
+    fig = path_plot(path[1:], shop_map, points, base_coords)
 
-user_steps_count = [2, 2, 3] # użytkowinik wybiera na ile chce podizelić przedziałów każdy parametr
+    lp = np.resize(range(1, n+1), (n, 1))
+    path = np.append(lp, path[1:], axis=1)
+    path = np.append([["lp", "x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]], path, axis=0)
 
-default_steps = steps(limits, user_steps_count) # przedziały z wagami wygenerowane automatycznie pokazujemy użytkownikowi
-print(default_steps)
+    return path, choices[1:], fig
+
+
+shop_map, points, points_ref, distance_each_other, base_coords = get_point_from_xlsx('sklep_4.xlsx')
+
+np.set_printoptions(suppress=True)
+
+minmax = [1, 1, 0, 0] # 1- max, 0- min
+
+limits = best(points[:, 2:], minmax)
+#print(limits)
+
+user_steps_count = [3, 5, 2]  # użytkownik wybiera na ile przedziałów chce podzielić każdy parametr
+
+default_steps = steps(limits, user_steps_count)  # przedziały z wagami wygenerowane automatycznie pokazujemy użytkownikowi
+#print(default_steps)
 
 user_steps = default_steps # przedziały z wagami zmienione przez użytkownika
 user_steps[0][1][1] = 0.18
 user_steps[1][1][1] = 0.18
 user_steps[2][1][1] = 0.28
 user_steps[2][2][1] = 0.14
-print(user_steps)
+#print(user_steps)
 
 usability = usability_fun(user_steps, minmax)
-print(usability)
+#print(usability)
 
-print(ranking(usability, points, user_steps))
+path, choices, fig1 = uta_n_points(points, user_steps, points_ref, distance_each_other, usability, 10)
 
+#print(path)
 
-
-
-
-
-
-
+#print(tabulate(path, headers="firstrow"))
+fig1.show()
+#print(choices)

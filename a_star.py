@@ -1,6 +1,7 @@
 import heapq
 import numpy as np
 
+
 def manhattan_distance(point1, point2):
     return abs(point1[0] - point2[0]) + abs(point1[1] - point2[1])
 
@@ -42,6 +43,7 @@ def astar_search(grid, start, goal):
                     came_from[neighbor] = current
 
     return None  # No path found
+
 
 def change_distance(table, distances, point, points_ref):
     for idx, el in enumerate(table[:, :2]):
