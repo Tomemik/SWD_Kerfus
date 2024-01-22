@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget, QCheckBox, QHBoxLayout, QTableView, QButtonGroup
+from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget, QCheckBox, QHBoxLayout, QTableView, QButtonGroup, QSizePolicy
 from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QFormLayout, QDialog, QHeaderView, QLineEdit, QFileDialog, QMessageBox
 from PyQt6.QtCore import Qt, QAbstractTableModel
 from PyQt6.QtGui import QColor
@@ -58,21 +58,27 @@ class ScreenRSM(QWidget):
         left_layout = QVBoxLayout()
 
 
+        self.topsis_label = QLabel(self)
+        self.topsis_label.setText("RSM")
+        self.topsis_label.setStyleSheet("font-size: 100px; color: white;")
+        self.topsis_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        left_layout.addWidget(self.topsis_label)
+
         self.execute_button = QPushButton(self)
-        self.execute_button.setStyleSheet("image: url(./grafika/but_rsm.png);"
+        self.execute_button.setStyleSheet("image: url(./grafika/but_oblicz.png);"
                                          "width: 120px;"
-                                         "height: 40px;"
+                                         "height: 60px;"
                                          "margin: 0px;"
                                          "background-color: transparent")
         self.execute_button.clicked.connect(self.execute_algorithm)
         left_layout.addWidget(self.execute_button)
 
-        self.select_points_button = QPushButton("Wybierz Klasy")
-        self.select_points_button.setStyleSheet(
+        self.select_points_button = QPushButton(self)
+        self.select_points_button.setStyleSheet("image: url(./grafika/but_klasy.png);"
                                          "width: 120px;"
-                                         "height: 40px;"
+                                         "height: 60px;"
                                          "margin: 0px;"
-                                         )
+                                         "background-color: transparent")
         self.select_points_button.clicked.connect(self.show_select_points_dialog)
         left_layout.addWidget(self.select_points_button)
 
@@ -80,7 +86,7 @@ class ScreenRSM(QWidget):
         self.back_button = QPushButton(self)
         self.back_button.setStyleSheet("image: url(./grafika/but_powrot.png);"
                                          "width: 120px;"
-                                         "height: 40px;"
+                                         "height: 60px;"
                                          "margin: 0px;"
                                          "background-color: transparent")
         self.back_button.clicked.connect(self.go_back)
@@ -382,4 +388,3 @@ class SelectPointsDialog(QDialog):
             else:
                 self.selected_points[class_name].discard(item.row())
             self.data_manager.set_data("user_classes", self.selected_points)
-
