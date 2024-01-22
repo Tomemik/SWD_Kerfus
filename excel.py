@@ -1,11 +1,10 @@
-from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QLabel, QPushButton, QFileDialog, QHeaderView
+from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QLabel, QPushButton, QFileDialog, \
+    QHeaderView, QHBoxLayout
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 import openpyxl
 import pandas as pd
 from data_manager import DataManager
-
-
 
 class ExcelTableScreen(QWidget):
     def __init__(self, data_manager: DataManager):
@@ -13,8 +12,11 @@ class ExcelTableScreen(QWidget):
         self.data_manager = data_manager
 
         self.layout = QVBoxLayout()
+
+        # Initially set visibility to False
         self.label = QLabel("Zaimportowane dane (Ostanie 2 kolumny zostaną wygnerowane automatycznie)")
         self.label.setStyleSheet("font-size: 15px; color: white;")
+        self.label.setVisible(False)
         self.layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         self.table_widget = QTableWidget()
@@ -29,26 +31,28 @@ class ExcelTableScreen(QWidget):
         self.layout.addWidget(self.table_widget)
 
         self.punkty_file_label = QLabel("Plik z mapą: ")
+        self.punkty_file_label.setVisible(False)
         self.punkty_file_label.setStyleSheet("font-size: 15px; color: white;")
         self.layout.addWidget(self.punkty_file_label)
 
-
+        # Add a new QHBoxLayout for buttons
+        button_layout = QHBoxLayout()
 
         self.load_point_button = QPushButton(self)
         self.load_point_button.setStyleSheet("image: url(./grafika/but_wczytaj.png);"
-                                                "width: 120px;"
-                                                "height: 40px;"
-                                                "background-color: transparent;")
+                                            "width: 120px;"
+                                            "height: 40px;"
+                                            "background-color: transparent;")
         self.load_point_button.clicked.connect(self.load_point_data)
-        self.layout.addWidget(self.load_point_button)
+        button_layout.addWidget(self.load_point_button)
 
         self.save_button = QPushButton(self)
         self.save_button.setStyleSheet("image: url(./grafika/but_zapisz.png);"
-                                         "width: 120px;"
-                                         "height: 40px;"
-                                         "background-color: transparent;")
+                                       "width: 120px;"
+                                       "height: 40px;"
+                                       "background-color: transparent;")
         self.save_button.clicked.connect(self.save_changes)
-        self.layout.addWidget(self.save_button)
+        button_layout.addWidget(self.save_button)
 
         self.back_button = QPushButton(self)
         self.back_button.setStyleSheet("image: url(./grafika/but_powrot.png);"
@@ -56,7 +60,10 @@ class ExcelTableScreen(QWidget):
                                        "height: 40px;"
                                        "background-color: transparent;")
         self.back_button.clicked.connect(self.go_back)
-        self.layout.addWidget(self.back_button)
+        button_layout.addWidget(self.back_button)
+
+        # Add the button layout to the main layout
+        self.layout.addLayout(button_layout)
 
         self.setLayout(self.layout)
         self.punkty_file_path = None
@@ -111,6 +118,10 @@ class ExcelTableScreen(QWidget):
                 # Update the label with the loaded file name
                 self.punkty_file_label.setText(f"Wczytany plik: {file_path}")
                 self.punkty_file_label.setStyleSheet("font-size: 15px; color: white;")
+
+                # Set visibility to True after loading
+                self.label.setVisible(True)
+                self.punkty_file_label.setVisible(True)
 
         except Exception as e:
             print(f"Error loading Punkty Excel data: {e}")
