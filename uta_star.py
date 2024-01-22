@@ -70,7 +70,7 @@ def ranking(fun, p, us):
     return np.array(rank)
 
 
-def uta_n_points(points, user_steps, points_ref, distance_each_other, usability, n):
+def uta_n_points(shop_map, base_coords, points, user_steps, points_ref, distance_each_other, usability, n):
     table_current = np.copy(points)
     distances_current = np.copy(distance_each_other)
     points_ref_current = np.copy(points_ref)
@@ -78,6 +78,7 @@ def uta_n_points(points, user_steps, points_ref, distance_each_other, usability,
     choices = [np.zeros((6, 7))]
 
     for _ in range(n):
+        print(_)
         rank = np.resize(ranking(usability, table_current[:, 2:], user_steps), (len(points_ref_current), 1))
         choice = np.insert(table_current, [2], rank, axis=1)
         choice = choice[choice[:, 2].argsort()[::-1]]
@@ -98,36 +99,3 @@ def uta_n_points(points, user_steps, points_ref, distance_each_other, usability,
     path = np.append([["lp", "x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]], path, axis=0)
 
     return path, choices[1:], fig
-
-
-shop_map, points, points_ref, distance_each_other, base_coords = get_point_from_xlsx('sklep_4.xlsx')
-
-np.set_printoptions(suppress=True)
-
-minmax = [1, 1, 0, 0] # 1- max, 0- min
-
-limits = best(points[:, 2:], minmax)
-#print(limits)
-
-user_steps_count = [3, 5, 2]  # użytkownik wybiera na ile przedziałów chce podzielić każdy parametr
-
-default_steps = steps(limits, user_steps_count)  # przedziały z wagami wygenerowane automatycznie pokazujemy użytkownikowi
-#print(default_steps)
-
-user_steps = default_steps # przedziały z wagami zmienione przez użytkownika
-user_steps[0][1][1] = 0.18
-user_steps[1][1][1] = 0.18
-user_steps[2][1][1] = 0.28
-user_steps[2][2][1] = 0.14
-#print(user_steps)
-
-usability = usability_fun(user_steps, minmax)
-#print(usability)
-
-path, choices, fig1 = uta_n_points(points, user_steps, points_ref, distance_each_other, usability, 10)
-
-#print(path)
-
-#print(tabulate(path, headers="firstrow"))
-fig1.show()
-#print(choices)
