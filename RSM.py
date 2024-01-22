@@ -22,7 +22,7 @@ class MatplotlibWidget(QWidget):
         self.canvas = FigureCanvas(plt.figure())
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
-        self.canvas.figure.patch.set_facecolor("black")
+        self.canvas.figure.patch.set_facecolor((0.27, 0.26, 0.33))
         self.setLayout(layout)
 
 
@@ -93,6 +93,14 @@ class ScreenRSM(QWidget):
         right_layout.addWidget(self.matplotlib_widget)  # Set right part width to 3/4th of the main window width
 
         self.kerfus_table = QTableView()
+
+        stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
+        self.kerfus_table.horizontalHeader().setStyleSheet(stylesheet)
+
+        stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
+        self.kerfus_table.verticalHeader().setStyleSheet(stylesheet)
+
+        self.kerfus_table.setStyleSheet("background-color: rgb(69, 67, 84); color: white;border:2px;border-style: none;")
         right_layout.addWidget(self.kerfus_table)
 
         self.layout.addLayout(left_layout, 1)

@@ -14,7 +14,7 @@ class MatplotlibWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.canvas = FigureCanvas(plt.figure(figsize=(4, 4)))  # Adjust figsize as needed
-        self.canvas.figure.patch.set_facecolor("black")
+        self.canvas.figure.patch.set_facecolor((0.27, 0.26, 0.33))
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
         self.setLayout(layout)
@@ -26,7 +26,7 @@ class MatplotlibWidget(QWidget):
         self.canvas.figure = new_ax.figure
         self.canvas.draw_idle()
 
-        self.canvas.figure.patch.set_facecolor("black")
+        self.canvas.figure.patch.set_facecolor((0.27, 0.26, 0.33))
 
         self.repaint()
 
@@ -97,7 +97,16 @@ class ScreenTopsis(QWidget):
         self.matplotlib_widget = MatplotlibWidget(self.layout.parentWidget())
         right_layout.addWidget(self.matplotlib_widget)
 
+
         self.kerfus_table = QTableView()
+
+        stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
+        self.kerfus_table.horizontalHeader().setStyleSheet(stylesheet)
+
+        stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
+        self.kerfus_table.verticalHeader().setStyleSheet(stylesheet)
+
+        self.kerfus_table.setStyleSheet("background-color: rgb(69, 67, 84); color: white;border:2px;border-style: none;")
         right_layout.addWidget(self.kerfus_table)
 
 
