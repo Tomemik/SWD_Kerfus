@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget, QCheckBox, QHBoxLayout, QTableView, QButtonGroup
-from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QFormLayout, QDialog, QHeaderView, QLineEdit, QFileDialog
+from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QFormLayout, QDialog, QHeaderView, QLineEdit, QFileDialog, QMessageBox
 from PyQt6.QtCore import Qt, QAbstractTableModel
 from PyQt6.QtGui import QColor
 import openpyxl
@@ -110,84 +110,98 @@ class ScreenRSM(QWidget):
         self.parent().setCurrentIndex(0)
 
     def execute_algorithm(self):
-        map_data = self.data_manager.get_data("map").copy()
-        points_data = self.data_manager.get_data("points").copy()
-        selection = self.data_manager.get_data("selection")
-        if self.data_manager.get_data("is_user"):
-            user_classes = self.data_manager.get_data("user_classes")
-        else:
-            user_classes = None
+        try:
+            map_data = self.data_manager.get_data("map").copy()
+            points_data = self.data_manager.get_data("points").copy()
+            selection = self.data_manager.get_data("selection")
+            if self.data_manager.get_data("is_user"):
+                user_classes = self.data_manager.get_data("user_classes")
+            else:
+                user_classes = None
 
 
-        shop = map_data.values.T
-        arr = shop.copy()
-        points = points_data.values
+            shop = map_data.values.T
+            arr = shop.copy()
+            points = points_data.values
 
-        points[:, 2] = -1 * points[:, 2]
-        points[:, 3] = -1 * points[:, 3]
+            points[:, 2] = -1 * points[:, 2]
+            points[:, 3] = -1 * points[:, 3]
 
-        points_ref = [(x, y) for x, y in points[:, :2]]
+            points_ref = [(x, y) for x, y in points[:, :2]]
 
-        kerfus = alg_RSM.run_rsm(shop, points, selection, points_ref, 9, user_classes)
+            kerfus = alg_RSM.run_rsm(shop, points, selection, points_ref, 9, user_classes)
 
-        base_coords = np.argwhere(arr == 6)
-        base_coords = tuple(base_coords[0])
-        arr[base_coords] = 0
+            base_coords = np.argwhere(arr == 6)
+            base_coords = tuple(base_coords[0])
+            arr[base_coords] = 0
 
-        kerfus = np.delete(kerfus, 0, axis=0)
-        kerfus = np.delete(kerfus, 0, axis=1)
+            kerfus = np.delete(kerfus, 0, axis=0)
+            kerfus = np.delete(kerfus, 0, axis=1)
 
-        kerfus2 = kerfus.copy()
-        kerfus2[:, 3] = -1 * kerfus2[:, 3]
-        kerfus2[:, 4] = -1 * kerfus2[:, 4]
+            kerfus2 = kerfus.copy()
+            kerfus2[:, 3] = -1 * kerfus2[:, 3]
+            kerfus2[:, 4] = -1 * kerfus2[:, 4]
 
-        kerfus = np.append([[base_coords[0], base_coords[1], 0, 0, 0, 0, 0]], kerfus, axis=0)
+            kerfus = np.append([[base_coords[0], base_coords[1], 0, 0, 0, 0, 0]], kerfus, axis=0)
 
 
-        kerfus_tab = [["lp", "x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]]
+            kerfus_tab = [["lp", "x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]]
 
-        for i, el in enumerate(kerfus2):
-            kerfus_tab = np.append(kerfus_tab, [np.append(i + 1, el)], axis=0)
+            for i, el in enumerate(kerfus2):
+                kerfus_tab = np.append(kerfus_tab, [np.append(i + 1, el)], axis=0)
 
-        print(kerfus_tab)
+            print(kerfus_tab)
 
-        ax = self.matplotlib_widget.canvas.figure.add_subplot(111)
+            ax = self.matplotlib_widget.canvas.figure.add_subplot(111)
 
-        shelves = np.argwhere(arr == 1)
-        entrance = np.argwhere(arr == 2)
-        exit = np.argwhere(arr == 3)
-        bread = np.argwhere(arr == 4)
-        meat = np.argwhere(arr == 5)
+            shelves = np.argwhere(arr == 1)
+            entrance = np.argwhere(arr == 2)
+            exit = np.argwhere(arr == 3)
+            bread = np.argwhere(arr == 4)
+            meat = np.argwhere(arr == 5)
 
-        ax.scatter(points[:, 0], points[:, 1], c='red', s=5)
-        for ix in range(kerfus.shape[0] - 1):
-            path = a_star.astar_search(arr, tuple(map(int, kerfus[ix, :2])), tuple(map(int, kerfus[ix + 1, :2])))
-            path = np.array(path)
-            ax.plot(path[:, 0], path[:, 1], '--', c='#1f77b4')
-        ax.scatter(kerfus[:, 0], kerfus[:, 1])
-        ax.scatter(shelves[:, 0], shelves[:, 1], c='lightblue', marker='s', s=26)
-        ax.scatter(entrance[:, 0], entrance[:, 1], c='green', marker='s', s=26)
-        ax.scatter(exit[:, 0], exit[:, 1], c='red', marker='s', s=26)
-        ax.scatter(bread[:, 0], bread[:, 1], c='grey', marker='s', s=26)
-        ax.scatter(meat[:, 0], meat[:, 1], c='orange', marker='s', s=26)
+            ax.scatter(points[:, 0], points[:, 1], c='red', s=5)
+            for ix in range(kerfus.shape[0] - 1):
+                path = a_star.astar_search(arr, tuple(map(int, kerfus[ix, :2])), tuple(map(int, kerfus[ix + 1, :2])))
+                path = np.array(path)
+                ax.plot(path[:, 0], path[:, 1], '--', c='#1f77b4')
+            ax.scatter(kerfus[:, 0], kerfus[:, 1])
+            ax.scatter(shelves[:, 0], shelves[:, 1], c='lightblue', marker='s', s=26)
+            ax.scatter(entrance[:, 0], entrance[:, 1], c='green', marker='s', s=26)
+            ax.scatter(exit[:, 0], exit[:, 1], c='red', marker='s', s=26)
+            ax.scatter(bread[:, 0], bread[:, 1], c='grey', marker='s', s=26)
+            ax.scatter(meat[:, 0], meat[:, 1], c='orange', marker='s', s=26)
 
-        for i in range(kerfus.shape[0]):
-            ax.annotate(i, tuple(kerfus[i, :2]))
+            for i in range(kerfus.shape[0]):
+                ax.annotate(i, tuple(kerfus[i, :2]))
 
-        ax.set_axisbelow(True)
-        ax.xaxis.set_minor_locator(MultipleLocator(1))
-        ax.yaxis.set_minor_locator(MultipleLocator(1))
-        ax.set_aspect('equal', adjustable='box')
-        ax.set_xlim((-0.5, 55.5))
-        ax.set_ylim((28.5, -0.5))
-        ax.grid(which='both', linewidth=0.25)
-        ax.set_xticks([])
-        ax.set_yticks([])
+            ax.set_axisbelow(True)
+            ax.xaxis.set_minor_locator(MultipleLocator(1))
+            ax.yaxis.set_minor_locator(MultipleLocator(1))
+            ax.set_aspect('equal', adjustable='box')
+            ax.set_xlim((-0.5, 55.5))
+            ax.set_ylim((28.5, -0.5))
+            ax.grid(which='both', linewidth=0.25)
+            ax.set_xticks([])
+            ax.set_yticks([])
 
-        self.matplotlib_widget.canvas.draw()
+            self.matplotlib_widget.canvas.draw()
 
-        model = KerfusTableModel(kerfus_tab)
-        self.kerfus_table.setModel(model)
+            model = KerfusTableModel(kerfus_tab)
+            self.kerfus_table.setModel(model)
+        except Exception as e:
+            if str(e) == 'too many indices for array: array is 1-dimensional, but 2 were indexed':
+                self.show_error_popup("Error in Algorithm", "Klasy są sprzeczne, wybierz inne lub użyj algorytmicznych")
+            else:
+                print("Error executing algorithm:", str(e))
+
+
+    def show_error_popup(self, title, message):
+        error_popup = QMessageBox()
+        error_popup.setIcon(QMessageBox.Icon.Critical)
+        error_popup.setWindowTitle(title)
+        error_popup.setText(message)
+        error_popup.exec()
 
     def show_select_points_dialog(self):
         select_points_dialog = SelectPointsDialog(self, self.data_manager)
