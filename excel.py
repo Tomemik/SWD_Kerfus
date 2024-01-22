@@ -1,9 +1,11 @@
-from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QLabel, QPushButton, QFileDialog
+from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QLabel, QPushButton, QFileDialog, QHeaderView
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 import openpyxl
 import pandas as pd
 from data_manager import DataManager
+
+
 
 class ExcelTableScreen(QWidget):
     def __init__(self, data_manager: DataManager):
@@ -11,11 +13,19 @@ class ExcelTableScreen(QWidget):
         self.data_manager = data_manager
 
         self.layout = QVBoxLayout()
-
-        self.label = QLabel("Excel Table Screen")
+        self.label = QLabel("Zaimportowane dane (Ostanie 2 kolumny zostaną wygnerowane automatycznie)")
+        self.label.setStyleSheet("font-size: 15px; color: white;")
         self.layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         self.table_widget = QTableWidget()
+        stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
+        self.table_widget.horizontalHeader().setStyleSheet(stylesheet)
+
+        stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
+        self.table_widget.verticalHeader().setStyleSheet(stylesheet)
+
+        self.table_widget.setStyleSheet("background-color: rgb(69, 67, 84); color: white;border:2px;border-style: none;")
+
         self.layout.addWidget(self.table_widget)
 
         self.punkty_file_label = QLabel("Plik z mapą: ")
