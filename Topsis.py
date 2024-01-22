@@ -149,6 +149,7 @@ class ScreenTopsis(QWidget):
 
             model = KerfusTableModel(kerfus_tab)
             self.kerfus_table.setModel(model)
+            self.data_manager.set_data("TopsisData", kerfus_tab)
 
         except:
             pass

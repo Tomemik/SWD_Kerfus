@@ -159,6 +159,8 @@ class ScreenUTA(QWidget):
 
             print(path)
 
+            self.data_manager.set_data("UtaData", path)
+
         except Exception as e:
             print("Exception in uta:", str(e))
 

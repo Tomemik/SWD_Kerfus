@@ -197,6 +197,8 @@ class ScreenRSM(QWidget):
 
             model = KerfusTableModel(kerfus_tab)
             self.kerfus_table.setModel(model)
+            self.data_manager.set_data("RSMData", kerfus_tab)
+
         except Exception as e:
             if str(e) == 'too many indices for array: array is 1-dimensional, but 2 were indexed':
                 self.show_error_popup("Error in Algorithm", "Klasy są sprzeczne, wybierz inne lub użyj algorytmicznych")
