@@ -53,7 +53,7 @@ class ScreenTopsis(QWidget):
         super().__init__()
         self.data_manager = data_manager
 
-        self.weights = np.array([0.25, 0.2, 0.3, 0.25])
+        self.weights = np.array([0.25, 0.25, 0.25, 0.25])
         self.layout = QHBoxLayout()
 
         right_layout = QVBoxLayout()
@@ -183,8 +183,18 @@ class WeightInputDialog(QDialog):
 
         self.weight_inputs = []
 
+        nazwy = ["Popularność", "Szerokość przejazdu", "Przeszkadzanie", "Odległość od bazy", "Odległość od ostatniego położenia"]
+
+        self.text_label = QLabel(self)
+        self.text_label.setText("Należy podać jak bardzo ważne są poszczególne wartości dla decyzji. \n Im większa waga tym bardziej liczy się parametr.")
+        self.text_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        layout.addWidget(self.text_label)
+
+        self.sum_label = QLabel("Suma wag: 1.0", self)
+        layout.addWidget(self.sum_label)
+
         for _ in range(4):
-            label = QLabel(f"Weight {_ + 1}:", self)
+            label = QLabel(nazwy[_], self)
             input_field = QLineEdit(self)
             input_field.setValidator(WeightValidator())  # Custom validator to ensure valid floats
             input_field.textChanged.connect(self.update_sum_label)
@@ -195,8 +205,7 @@ class WeightInputDialog(QDialog):
 
             self.weight_inputs.append(input_field)
 
-        self.sum_label = QLabel("Summed Weights: 1.0", self)
-        layout.addWidget(self.sum_label)
+
 
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         button_box.accepted.connect(self.check_and_accept)
