@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QDialogButtonBox, QVBoxLayout, QLabel, QPushButton, QWidget, QLineEdit, QDialog, \
     QTableWidget, QTableWidgetItem, QHeaderView, QSizePolicy, QHBoxLayout, QTableView, QMessageBox
-from PyQt6.QtGui import QValidator, QStandardItemModel, QStandardItem
+from PyQt6.QtGui import QValidator, QStandardItemModel, QStandardItem, QColor
 from PyQt6.QtCore import Qt, QAbstractTableModel
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -98,8 +98,10 @@ class ScreenUTA(QWidget):
 
         self.setLayout(self.layout)
 
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        right_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setAutoFillBackground(True)
+        p = self.palette()
+        p.setColor(self.backgroundRole(), QColor(69, 67, 84))  # You can set any color you want here
+        self.setPalette(p)
 
     def go_back(self):
         self.parent().setCurrentIndex(0)

@@ -59,19 +59,26 @@ class ScreenTopsis(QWidget):
         right_layout = QVBoxLayout()
         left_layout = QVBoxLayout()
 
+        self.topsis_label = QLabel(self)
+        self.topsis_label.setText("TOPSIS")
+        self.topsis_label.setStyleSheet("font-size: 100px; color: white;")
+        self.topsis_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        left_layout.addWidget(self.topsis_label)
+
+
         self.execute_button = QPushButton(self)
-        self.execute_button.setStyleSheet("image: url(./grafika/but_topsis.png);"
+        self.execute_button.setStyleSheet("image: url(./grafika/but_oblicz.png);"
                                          "width: 120px;"
-                                         "height: 40px;"
+                                         "height: 60px;"
                                          "margin: 0px;"
                                          "background-color: transparent")
         self.execute_button.clicked.connect(self.run_topsis)
         left_layout.addWidget(self.execute_button)
 
-        self.execute_button = QPushButton('wagi')
-        self.execute_button.setStyleSheet(""
+        self.execute_button = QPushButton(self)
+        self.execute_button.setStyleSheet("image: url(./grafika/but_wagi.png);"
                                          "width: 120px;"
-                                         "height: 40px;"
+                                         "height: 60px;"
                                          "margin: 0px;"
                                          "background-color: transparent")
         self.execute_button.clicked.connect(self.show_weight_input_dialog)
@@ -103,6 +110,14 @@ class ScreenTopsis(QWidget):
         self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        self.setAutoFillBackground(True)
+        p = self.palette()
+        p.setColor(self.backgroundRole(), QColor(69, 67, 84))  # You can set any color you want here
+        self.setPalette(p)
+
+
+
+
     def go_back(self):
         self.parent().setCurrentIndex(0)
 
@@ -132,6 +147,7 @@ class ScreenTopsis(QWidget):
     def show_weight_input_dialog(self):
         try:
             dialog = WeightInputDialog(self)
+            dialog.setWindowTitle("Kreator wag")
             result = dialog.exec()
 
             if result == QDialog.DialogCode.Accepted:
@@ -163,13 +179,14 @@ class WeightInputDialog(QDialog):
             input_field = QLineEdit(self)
             input_field.setValidator(WeightValidator())  # Custom validator to ensure valid floats
             input_field.textChanged.connect(self.update_sum_label)
+            input_field.setText("0.25")
 
             layout.addWidget(label)
             layout.addWidget(input_field)
 
             self.weight_inputs.append(input_field)
 
-        self.sum_label = QLabel("Summed Weights: 0.0", self)
+        self.sum_label = QLabel("Summed Weights: 1.0", self)
         layout.addWidget(self.sum_label)
 
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)

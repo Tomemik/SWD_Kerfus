@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget, QCheckBox, QHBoxLayout, QTableView
 from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QFormLayout, QDialog, QHeaderView, QLineEdit, QFileDialog
 from PyQt6.QtCore import Qt, QAbstractTableModel
+from PyQt6.QtGui import QColor
 import openpyxl
 import pandas as pd
 import numpy as np
@@ -106,6 +107,12 @@ class ScreenRSM(QWidget):
         self.setLayout(self.layout)
 
         self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setAutoFillBackground(True)
+        p = self.palette()
+        p.setColor(self.backgroundRole(), QColor(69, 67, 84))  # You can set any color you want here
+        self.setPalette(p)
+
+
 
     def go_back(self):
         self.parent().setCurrentIndex(0)

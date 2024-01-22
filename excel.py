@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QLabel, QPushButton, QFileDialog
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
 import openpyxl
 import pandas as pd
 from data_manager import DataManager
@@ -17,17 +18,25 @@ class ExcelTableScreen(QWidget):
         self.table_widget = QTableWidget()
         self.layout.addWidget(self.table_widget)
 
-        self.punkty_file_label = QLabel("Punkty File: ")
+        self.punkty_file_label = QLabel("Plik z mapą: ")
+        self.punkty_file_label.setStyleSheet("font-size: 15px; color: white;")
         self.layout.addWidget(self.punkty_file_label)
 
-        self.map_file_label = QLabel("Map File: ")
-        self.layout.addWidget(self.map_file_label)
 
-        self.load_point_button = QPushButton("Ładuj punkty")
+
+        self.load_point_button = QPushButton(self)
+        self.load_point_button.setStyleSheet("image: url(./grafika/but_wczytaj.png);"
+                                                "width: 120px;"
+                                                "height: 40px;"
+                                                "background-color: transparent;")
         self.load_point_button.clicked.connect(self.load_point_data)
         self.layout.addWidget(self.load_point_button)
 
-        self.save_button = QPushButton("Zapisz zmiany")
+        self.save_button = QPushButton(self)
+        self.save_button.setStyleSheet("image: url(./grafika/but_zapisz.png);"
+                                         "width: 120px;"
+                                         "height: 40px;"
+                                         "background-color: transparent;")
         self.save_button.clicked.connect(self.save_changes)
         self.layout.addWidget(self.save_button)
 
@@ -41,9 +50,15 @@ class ExcelTableScreen(QWidget):
 
         self.setLayout(self.layout)
         self.punkty_file_path = None
-        self.map_file_path = None
+
         self.point_df = None
         self.map_df = None
+
+        self.setAutoFillBackground(True)
+        p = self.palette()
+        p.setColor(self.backgroundRole(), QColor(69, 67, 84))  # You can set any color you want here
+        self.setPalette(p)
+
 
     def load_point_data(self):
         try:
@@ -78,7 +93,8 @@ class ExcelTableScreen(QWidget):
                 self.data_manager.set_data("map", self.map_df)
 
                 # Update the label with the loaded file name
-                self.punkty_file_label.setText(f"Punkty File: {file_path}")
+                self.punkty_file_label.setText(f"Wczytany plik: {file_path}")
+                self.punkty_file_label.setStyleSheet("font-size: 15px; color: white;")
 
         except Exception as e:
             print(f"Error loading Punkty Excel data: {e}")
