@@ -40,7 +40,10 @@ class KerfusTableModel(QAbstractTableModel):
     def data(self, index, role):
         if role == Qt.ItemDataRole.DisplayRole:
             value = self.data[index.row()][index.column()]
-            return str(value) if value is not None else ""  # Set empty string for None values
+            # Convert the first column to int
+            if index.column() != 3 and value is not None:
+                return int(float(value))
+            return str(value) if value is not None else ""  # Set an empty string for None values
         return None
 
     def headerData(self, section, orientation, role):
