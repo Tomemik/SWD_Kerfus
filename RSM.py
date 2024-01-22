@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget, QCheckBox, QHBoxLayout, QTableView
+from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QWidget, QCheckBox, QHBoxLayout, QTableView, QButtonGroup
 from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QFormLayout, QDialog, QHeaderView, QLineEdit, QFileDialog
 from PyQt6.QtCore import Qt, QAbstractTableModel
 from PyQt6.QtGui import QColor
@@ -39,22 +39,24 @@ class KerfusTableModel(QAbstractTableModel):
 
     def data(self, index, role):
         if role == Qt.ItemDataRole.DisplayRole:
-            return str(self.data[index.row()][index.column()])
+            value = self.data[index.row()][index.column()]
+            return str(value) if value is not None else ""  # Set empty string for None values
         return None
+
 
 
 class ScreenRSM(QWidget):
     def __init__(self, data_manager: DataManager):
         super().__init__()
         self.data_manager = data_manager
+        self.data_manager.set_data("user_classes", None)
+        self.data_manager.set_data("selection", [0, 1])
 
         self.layout = QHBoxLayout()  # Use QHBoxLayout instead of QVBoxLayout
 
         right_layout = QVBoxLayout()
         left_layout = QVBoxLayout()
 
-        self.class_type_checkbox = QCheckBox("Używaj klas użytkownika")
-        left_layout.addWidget(self.class_type_checkbox)
 
         self.execute_button = QPushButton(self)
         self.execute_button.setStyleSheet("image: url(./grafika/but_rsm.png);"
@@ -74,14 +76,6 @@ class ScreenRSM(QWidget):
         self.select_points_button.clicked.connect(self.show_select_points_dialog)
         left_layout.addWidget(self.select_points_button)
 
-        self.enter_custom_points_button = QPushButton("Stwórz decyzje")
-        self.enter_custom_points_button.setStyleSheet(
-                                         "width: 120px;"
-                                         "height: 40px;"
-                                         "margin: 0px;"
-                                         )
-        self.enter_custom_points_button.clicked.connect(self.show_enter_custom_points_dialog)
-        left_layout.addWidget(self.enter_custom_points_button)
 
         self.back_button = QPushButton(self)
         self.back_button.setStyleSheet("image: url(./grafika/but_powrot.png);"
@@ -112,14 +106,19 @@ class ScreenRSM(QWidget):
         p.setColor(self.backgroundRole(), QColor(69, 67, 84))  # You can set any color you want here
         self.setPalette(p)
 
-
-
     def go_back(self):
         self.parent().setCurrentIndex(0)
 
     def execute_algorithm(self):
         map_data = self.data_manager.get_data("map").copy()
         points_data = self.data_manager.get_data("points").copy()
+        selection = self.data_manager.get_data("selection")
+        if self.data_manager.get_data("is_user"):
+            user_classes = self.data_manager.get_data("user_classes")
+        else:
+            user_classes = None
+
+
         shop = map_data.values.T
         arr = shop.copy()
         points = points_data.values
@@ -129,7 +128,7 @@ class ScreenRSM(QWidget):
 
         points_ref = [(x, y) for x, y in points[:, :2]]
 
-        kerfus = alg_RSM.run_rsm(shop, points, [0, 1], points_ref, 9)
+        kerfus = alg_RSM.run_rsm(shop, points, selection, points_ref, 9, user_classes)
 
         base_coords = np.argwhere(arr == 6)
         base_coords = tuple(base_coords[0])
@@ -191,38 +190,102 @@ class ScreenRSM(QWidget):
         self.kerfus_table.setModel(model)
 
     def show_select_points_dialog(self):
-        select_points_dialog = SelectPointsDialog(self)
+        select_points_dialog = SelectPointsDialog(self, self.data_manager)
         select_points_dialog.exec()
-
-    def show_enter_custom_points_dialog(self):
-        enter_custom_points_dialog = EnterCustomPointsDialog(self)
-        enter_custom_points_dialog.exec()
 
 
 class SelectPointsDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, parent, data_manager: DataManager):
+        try:
+            super().__init__(parent)
 
-        self.setWindowTitle("Select Points")
+            self.data_manager = data_manager
 
-        layout = QVBoxLayout()
+            self.setWindowTitle("Select Points")
 
-        self.table = QTableWidget(self)
-        self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels(["X", "Y", "wsp. Popularnosci", "szerokość alejki", "odleglosc od półki", "klasa 1", "klasa 2"])
+            self.layout = QVBoxLayout()
+            self.selection = []
 
-        load_data_button = QPushButton("Load Data from Excel")
-        load_data_button.clicked.connect(self.load_data_from_excel)
+            self.algo_check = QCheckBox('Używaj klas Algorytmicznych', self)
+            self.user_check = QCheckBox('Używaj klas Użytkownika', self)
 
-        save_data_button = QPushButton("Save data")
-        save_data_button.clicked.connect(self.save_data)
+            self.group = QButtonGroup(self)
+            self.group.addButton(self.algo_check)
+            self.group.addButton(self.user_check)
 
-        self.setLayout(layout)
-        self.selected_points = {'class1': set(), 'class2': set()}
+            self.layout.addWidget(self.algo_check)
+            self.layout.addWidget(self.user_check)
 
-        layout.addWidget(load_data_button)
-        layout.addWidget(self.table)
-        layout.addWidget(save_data_button)
+            self.group.buttonClicked.connect(self.show_hide_widgets)
+
+            self.table = QTableWidget(self)
+            self.table.setColumnCount(7)
+            self.table.setHorizontalHeaderLabels(["X", "Y", "wsp. Popularnosci", "szerokość alejki", "odleglosc od półki", "klasa 1", "klasa 2"])
+
+            self.load_data_button = QPushButton("Load Data from Excel")
+            self.load_data_button.clicked.connect(self.load_data_from_excel)
+
+            self.check_A0 = QCheckBox("A0")
+            self.check_A1 = QCheckBox("A1")
+            self.check_A2 = QCheckBox("A2")
+            self.check_A3 = QCheckBox("A3")
+
+            self.group2 = QButtonGroup(self)
+            self.group2.setExclusive(False)
+            self.group2.addButton(self.check_A0)
+            self.group2.addButton(self.check_A1)
+            self.group2.addButton(self.check_A2)
+            self.group2.addButton(self.check_A3)
+
+            self.layout.addWidget(self.check_A0)
+            self.layout.addWidget(self.check_A1)
+            self.layout.addWidget(self.check_A2)
+            self.layout.addWidget(self.check_A3)
+
+            self.check_A0.setVisible(0)
+            self.check_A1.setVisible(0)
+            self.check_A2.setVisible(0)
+            self.check_A3.setVisible(0)
+
+            self.group2.buttonClicked.connect(self.show_hide_widgets)
+
+            self.setLayout(self.layout)
+            self.selected_points = {'class1': set(), 'class2': set()}
+
+            self.layout.addWidget(self.load_data_button)
+            self.layout.addWidget(self.table)
+
+        except Exception as e:
+            print("Error loading data:", str(e))
+
+    def show_hide_widgets(self):
+        try:
+            algo = self.algo_check.isChecked()
+            user = self.user_check.isChecked()
+
+            self.table.setVisible(user)
+            self.table.setRowCount(0)
+
+            self.load_data_button.setVisible(user)
+
+            self.check_A0.setVisible(algo)
+            self.check_A1.setVisible(algo)
+            self.check_A2.setVisible(algo)
+            self.check_A3.setVisible(algo)
+
+            selected_checkboxes = [button for button in self.group2.buttons() if button.isChecked()]
+            if len(selected_checkboxes) > 2:
+                # Uncheck the last selected checkbox
+                selected_checkboxes[-1].setChecked(False)
+
+            self.selection = [i for i, button in enumerate(self.group2.buttons()) if button.isChecked()]
+
+            self.data_manager.set_data("selection", self.selection)
+            self.data_manager.set_data("is_user", user)
+            print(user)
+        except Exception as e:
+            print("Error loading data:", str(e))
+
 
     def load_data_from_excel(self):
         file_dialog = QFileDialog()
@@ -232,10 +295,14 @@ class SelectPointsDialog(QDialog):
             # Read data from the Excel file using openpyxl
             try:
                 workbook = openpyxl.load_workbook(file_path)
-                sheet = workbook.active
+                sheet = workbook['punkty']
 
                 # Skip the first row and start from the second column
-                data = [(cell.value if cell is not None else "") for row in sheet.iter_rows(min_row=2) for cell in row[1:]]
+                data = [
+                    cell.value if (cell is not None and cell.value is not None) else ""
+                    for row in sheet.iter_rows(min_row=2)
+                    for cell in row[1:]
+                ]
 
                 self.populate_table(data, sheet.max_column - 1)  # Subtract 1 for skipping the first column
             except Exception as e:
@@ -249,18 +316,26 @@ class SelectPointsDialog(QDialog):
         self.table.setRowCount(0)
 
         # Populate the table with data
-        for row, values in enumerate(zip(*[iter(data)] * max_column)):
+        row_count = len(data) // max_column
+        remaining_items = len(data) % max_column
+
+        if remaining_items > 0:
+            row_count += 1  # Add an extra row for the remaining items
+
+        for row in range(row_count):
             self.table.insertRow(row)
-            for col, value in enumerate(values):
-                item = QTableWidgetItem(str(value))
-                self.table.setItem(row, col, item)
+            for col in range(max_column):
+                index = row * max_column + col
+                if index < len(data):
+                    value = data[index]
+                    item = QTableWidgetItem(str(value))
+                    self.table.setItem(row, col, item)
 
-                if col in (5, 6):  # Only for columns 6 and 7 (checkbox columns)
-                    checkbox_item = QTableWidgetItem()
-                    checkbox_item.setFlags(checkbox_item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-                    checkbox_item.setCheckState(Qt.CheckState.Unchecked)
-                    self.table.setItem(row, col, checkbox_item)
-
+                    if col in (5, 6):  # Only for columns 6 and 7 (checkbox columns)
+                        checkbox_item = QTableWidgetItem()
+                        checkbox_item.setFlags(checkbox_item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+                        checkbox_item.setCheckState(Qt.CheckState.Unchecked)
+                        self.table.setItem(row, col, checkbox_item)
 
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
@@ -284,61 +359,5 @@ class SelectPointsDialog(QDialog):
                 self.selected_points[class_name].add(item.row())
             else:
                 self.selected_points[class_name].discard(item.row())
+            self.data_manager.set_data("user_classes", self.selected_points)
 
-
-class EnterCustomPointsDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.setWindowTitle("Enter Custom Points")
-
-        layout = QVBoxLayout()
-
-        self.table = QTableWidget(self)
-        self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(["X", "Y", "wsp. Popularnosci", "szerokość alejki", "odleglosc od półki"])
-
-        add_row_button = QPushButton("Add Row")
-        add_row_button.clicked.connect(self.add_row)
-
-        save_button = QPushButton("Save Table")
-        save_button.clicked.connect(self.save_table)
-
-        layout.addWidget(add_row_button)
-        layout.addWidget(self.table)
-        layout.addWidget(save_button)
-
-        self.setLayout(layout)
-
-    def save_table(self):
-        try:
-            df = self.get_table_data()
-            print(df)
-        except Exception as e:
-            print("Error saving table:", str(e))
-
-    def add_row(self):
-        row_position = self.table.rowCount()
-        self.table.insertRow(row_position)
-
-        for col in range(5):
-            item = QTableWidgetItem("")
-            self.table.setItem(row_position, col, item)
-
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-
-    def get_table_data(self):
-        rows = self.table.rowCount()
-        cols = self.table.columnCount()
-        data = []
-
-        for row in range(rows):
-            row_data = []
-            for col in range(cols):
-                item = self.table.item(row, col)
-                row_data.append(item.text() if item is not None else "")
-            data.append(row_data)
-
-        columns = ["X", "Y", "wsp. Popularnosci", "szerokość alejki", "odleglosc od półki"]
-        df = pd.DataFrame(data, columns=columns)
-        return df

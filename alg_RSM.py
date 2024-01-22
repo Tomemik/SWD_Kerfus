@@ -206,15 +206,26 @@ def get_best_point(class1, class2, points):
     np.set_printoptions(suppress=True)
     return points[0]
 
-def run_rsm(shop, points, selection, points_ref, n):
-    points, ref_distances = add_distances(shop, points)
+def run_rsm(shop, points, selection, points_ref, n, user_classes=None):
+    _, points, ref_distances, _ = add_distances(shop, points)
     points_current = np.copy(points)
     distances_current = np.copy(ref_distances)
     points_ref_current = np.copy(points_ref)
     path = np.array([[0, 0, 0, 0, 0, 0, 0, 0]])
+    if user_classes is not None:
+        new_c1 = []
+        new_c2 = []
+        class1 = list(user_classes['class1'])
+        class2 = list(user_classes['class2'])
+        for i in class1:
+            new_c1.append(points_current[i])
+        for i in class2:
+            new_c2.append(points_current[i])
+        class1, class2 = check_classes(np.array(new_c1), np.array(new_c2))
     for i in range(n+1):
-        classes = get_classes(points_current)
-        class1, class2 = check_classes(classes[selection[0]], classes[selection[1]])
+        if user_classes is None:
+            classes = get_classes(points_current)
+            class1, class2 = check_classes(classes[selection[0]], classes[selection[1]])
         best = get_best_point(class1, class2, points_current)
         best[0] = i
         best[1], best[3] = best[3], best[1]

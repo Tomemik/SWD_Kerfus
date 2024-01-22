@@ -59,7 +59,6 @@ class ExcelTableScreen(QWidget):
         p.setColor(self.backgroundRole(), QColor(69, 67, 84))  # You can set any color you want here
         self.setPalette(p)
 
-
     def load_point_data(self):
         try:
             file_dialog = QFileDialog()
@@ -73,6 +72,9 @@ class ExcelTableScreen(QWidget):
                 point_sheet = workbook['punkty']
                 map_sheet = workbook['mapa']
 
+                # Clear the table before loading new data
+                self.table_widget.clear()
+
                 # Load Points data
                 self.table_widget.setRowCount(point_sheet.max_row)
                 self.table_widget.setColumnCount(point_sheet.max_column)
@@ -81,15 +83,19 @@ class ExcelTableScreen(QWidget):
                 for row_index, row in enumerate(point_sheet.iter_rows(values_only=True)):
                     row_data = []
                     for col_index, value in enumerate(row):
-                        item = QTableWidgetItem(str(value))
-                        self.table_widget.setItem(row_index, col_index, item)
-                        row_data.append(str(value))
-                    data.append(row_data)
+                        if value is not None:
+                            item = QTableWidgetItem(str(value))
+                            self.table_widget.setItem(row_index, col_index, item)
+                            row_data.append(str(value))
+                    if row_data:  # Skip empty rows
+                        data.append(row_data)
 
-                self.point_df = pd.read_excel(self.punkty_file_path, sheet_name='punkty', usecols='B:F', skiprows=0, nrows=100, keep_default_na=False)
+                self.point_df = pd.read_excel(self.punkty_file_path, sheet_name='punkty', usecols='B:F', skiprows=0,
+                                              nrows=100, keep_default_na=False)
                 self.data_manager.set_data("points", self.point_df)
 
-                self.map_df = pd.read_excel(self.punkty_file_path, sheet_name='mapa', usecols='B:BE', skiprows=0, nrows=29)
+                self.map_df = pd.read_excel(self.punkty_file_path, sheet_name='mapa', usecols='B:BE', skiprows=0,
+                                            nrows=29)
                 self.data_manager.set_data("map", self.map_df)
 
                 # Update the label with the loaded file name
