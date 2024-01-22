@@ -61,19 +61,25 @@ class ScreenUTA(QWidget):
         right_layout = QVBoxLayout()
         left_layout = QVBoxLayout()
 
+        self.topsis_label = QLabel(self)
+        self.topsis_label.setText("UTA*")
+        self.topsis_label.setStyleSheet("font-size: 100px; color: white;")
+        self.topsis_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        left_layout.addWidget(self.topsis_label)
+
         self.execute_button = QPushButton(self)
-        self.execute_button.setStyleSheet("image: url(./grafika/but_uta.png);"
-                                          "width: 120px;"
-                                          "height: 40px;"
+        self.execute_button.setStyleSheet("image: url(./grafika/but_oblicz.png);"
+                                          "width: 140px;"
+                                          "height: 60px;"
                                           "margin: 0px;"
                                           "background-color: transparent")
         self.execute_button.clicked.connect(self.run_uta)
         left_layout.addWidget(self.execute_button)
 
-        self.execute_button = QPushButton('wagi')
-        self.execute_button.setStyleSheet(""
+        self.execute_button = QPushButton(self)
+        self.execute_button.setStyleSheet("image: url(./grafika/but_wagi.png);"
                                           "width: 120px;"
-                                          "height: 40px;"
+                                          "height: 60px;"
                                           "margin: 0px;"
                                           "background-color: transparent")
         self.execute_button.clicked.connect(self.show_input_dialog)
@@ -297,6 +303,5 @@ class UserStepsDialog(QDialog):
         try:
             self.accept()
 
-            self.utascrn.run_uta()
         except Exception as e:
             print("Exception in show_user_steps_dialog:", str(e))
