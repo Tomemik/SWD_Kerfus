@@ -229,13 +229,20 @@ class SelectPointsDialog(QDialog):
 
             self.data_manager = data_manager
 
-            self.setWindowTitle("Select Points")
+            self.setWindowTitle("Wybor klas")
 
             self.layout = QVBoxLayout()
             self.selection = []
 
+            self.text_label = QLabel(self)
+            self.text_label.setText("Aby rozwiązać zadanie należy podać klasy z którymi punkty bedą porównywane.\n Należy podać zbiór pożądany i niepożądany.\n Można go wybrać z automatycznie wygenerowanych zbiorów A0-A3.")
+            self.text_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+            self.layout.addWidget(self.text_label)
+
+
             self.algo_check = QCheckBox('Używaj klas Algorytmicznych', self)
             self.user_check = QCheckBox('Używaj klas Użytkownika', self)
+            self.user_check.setCheckState(Qt.CheckState.Checked)
 
             self.group = QButtonGroup(self)
             self.group.addButton(self.algo_check)
@@ -250,9 +257,13 @@ class SelectPointsDialog(QDialog):
             self.table.setColumnCount(7)
             self.table.setHorizontalHeaderLabels(["X", "Y", "wsp. Popularnosci", "szerokość alejki", "odleglosc od półki", "klasa 1", "klasa 2"])
 
-            self.load_data_button = QPushButton("Load Data from Excel")
+            self.load_data_button = QPushButton("Importuj punkty dla klas")
             self.load_data_button.clicked.connect(self.load_data_from_excel)
+            self.clas = QLabel(self)
+            self.clas.setText("Dostepne klasy")
+            self.clas.setStyleSheet("font-weight: bold;")
 
+            self.clas.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
             self.check_A0 = QCheckBox("A0")
             self.check_A1 = QCheckBox("A1")
             self.check_A2 = QCheckBox("A2")
@@ -265,11 +276,15 @@ class SelectPointsDialog(QDialog):
             self.group2.addButton(self.check_A2)
             self.group2.addButton(self.check_A3)
 
+            self.layout.addWidget(self.clas)
             self.layout.addWidget(self.check_A0)
             self.layout.addWidget(self.check_A1)
             self.layout.addWidget(self.check_A2)
             self.layout.addWidget(self.check_A3)
 
+            self.layout.addWidget(self.text_label)
+
+            self.clas.setVisible(0)
             self.check_A0.setVisible(0)
             self.check_A1.setVisible(0)
             self.check_A2.setVisible(0)
@@ -283,8 +298,21 @@ class SelectPointsDialog(QDialog):
             self.layout.addWidget(self.load_data_button)
             self.layout.addWidget(self.table)
 
+            self.ok_button = QPushButton("OK", self)
+            self.ok_button.clicked.connect(self.accept_selection)
+            self.layout.addWidget(self.ok_button)
+
+
+
         except Exception as e:
             print("Error loading data:", str(e))
+
+    def accept_selection(self):
+        # Tutaj możesz umieścić kod, który będzie wykonywany po naciśnięciu przycisku "OK"
+        # Na przykład, możesz zebrać wybrane punkty i coś z nimi zrobić.
+        print("Accepted selection")
+        self.close()
+
 
     def show_hide_widgets(self):
         try:
@@ -295,7 +323,7 @@ class SelectPointsDialog(QDialog):
             self.table.setRowCount(0)
 
             self.load_data_button.setVisible(user)
-
+            self.clas.setVisible(algo)
             self.check_A0.setVisible(algo)
             self.check_A1.setVisible(algo)
             self.check_A2.setVisible(algo)
