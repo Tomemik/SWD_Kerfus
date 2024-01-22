@@ -28,7 +28,8 @@ class MatplotlibWidget(QWidget):
 class KerfusTableModel(QAbstractTableModel):
     def __init__(self, kerfus_tab, parent=None):
         super().__init__(parent)
-        self.data = kerfus_tab
+        self.headers = kerfus_tab[0]  # Extract headers from the first row
+        self.data = kerfus_tab[1:]  # Exclude the first row (headers) from the data
 
     def rowCount(self, parent):
         return len(self.data)
@@ -40,6 +41,16 @@ class KerfusTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DisplayRole:
             value = self.data[index.row()][index.column()]
             return str(value) if value is not None else ""  # Set empty string for None values
+        return None
+
+    def headerData(self, section, orientation, role):
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                # Set headers from the extracted headers
+                return str(self.headers[section]) if section < len(self.headers) else ""
+            elif orientation == Qt.Orientation.Vertical:
+                # Set vertical headers with row numbers
+                return str(section) if section < len(self.data) else ""
         return None
 
 
@@ -81,17 +92,41 @@ class ScreenResults(QWidget):
             self.layout.parentWidget())  # Use the parent widget as the parent for MatplotlibWidget
         right_layout.addWidget(self.matplotlib_widget)  # Set right part width to 3/4th of the main window width
 
-        self.kerfus_table = QTableView()
+        self.Topsis_table = QTableView()
 
         stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
-        self.kerfus_table.horizontalHeader().setStyleSheet(stylesheet)
+        self.Topsis_table.horizontalHeader().setStyleSheet(stylesheet)
 
         stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
-        self.kerfus_table.verticalHeader().setStyleSheet(stylesheet)
+        self.Topsis_table.verticalHeader().setVisible(False)
 
-        self.kerfus_table.setStyleSheet(
+        self.Topsis_table.setStyleSheet(
             "background-color: rgb(69, 67, 84); color: white;border:2px;border-style: none;")
-        right_layout.addWidget(self.kerfus_table)
+        right_layout.addWidget(self.Topsis_table)
+
+        self.RSM_table = QTableView()
+
+        stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
+        self.RSM_table.horizontalHeader().setStyleSheet(stylesheet)
+
+        stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
+        self.RSM_table.verticalHeader().setVisible(False)
+
+        self.RSM_table.setStyleSheet(
+            "background-color: rgb(69, 67, 84); color: white;border:2px;border-style: none;")
+        right_layout.addWidget(self.RSM_table)
+
+        self.Uta_table = QTableView()
+
+        stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
+        self.Uta_table.horizontalHeader().setStyleSheet(stylesheet)
+
+        stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
+        self.Uta_table.verticalHeader().setVisible(False)
+
+        self.Uta_table.setStyleSheet(
+            "background-color: rgb(69, 67, 84); color: white;border:2px;border-style: none;")
+        right_layout.addWidget(self.Uta_table)
 
         self.layout.addLayout(left_layout, 1)
         self.layout.addLayout(right_layout, 3)
@@ -158,7 +193,7 @@ class ScreenResults(QWidget):
             for ix in range(kerfusT.shape[0] - 1):
                 pathT = a_star.astar_search(arr, tuple(map(int, kerfusT[ix, :2])), tuple(map(int, kerfusT[ix + 1, :2])))
                 pathT = np.array(pathT)
-                ax.plot(pathT[:, 0], pathT[:, 1], '--', c='limegreen')
+                ax.plot(pathT[:, 0], pathT[:, 1], '--', c='seagreen')
 
                 pathR = a_star.astar_search(arr, tuple(map(int, kerfusR[ix, :2])), tuple(map(int, kerfusR[ix + 1, :2])))
                 pathR = np.array(pathR)
@@ -166,11 +201,11 @@ class ScreenResults(QWidget):
 
                 pathU = a_star.astar_search(arr, tuple(map(int, kerfusU[ix, :2])), tuple(map(int, kerfusU[ix + 1, :2])))
                 pathU = np.array(pathU)
-                ax.plot(pathU[:, 0], pathU[:, 1], '--', c='teal')
+                ax.plot(pathU[:, 0], pathU[:, 1], '--', c='navy')
 
-            ax.scatter(kerfusT[:, 0], kerfusT[:, 1], c='limegreen')
+            ax.scatter(kerfusT[:, 0], kerfusT[:, 1], c='seagreen')
             ax.scatter(kerfusR[:, 0], kerfusR[:, 1], c='tomato')
-            ax.scatter(kerfusU[:, 0], kerfusU[:, 1], c='teal')
+            ax.scatter(kerfusU[:, 0], kerfusU[:, 1], c='navy')
 
             ax.scatter(shelves[:, 0], shelves[:, 1], c='lightblue', marker='s', s=26)
             ax.scatter(entrance[:, 0], entrance[:, 1], c='green', marker='s', s=26)
@@ -180,9 +215,9 @@ class ScreenResults(QWidget):
 
 
             for i in range(kerfusT.shape[0]):
-                ax.annotate(i, tuple(kerfusT[i, :2]), c='limegreen')
-                ax.annotate(i, tuple(kerfusR[i, :2]), c='tomato')
-                ax.annotate(i, tuple(kerfusU[i, :2]), c='teal')
+                ax.annotate(i, tuple(kerfusT[i, :2]+np.array([0.2, -0.1])), c='forestgreen')
+                ax.annotate(i, tuple(kerfusR[i, :2]+np.array([-1, -0.1])), c='tomato')
+                ax.annotate(i, tuple(kerfusU[i, :2]+np.array([0.2, 1.1])), c='navy')
 
             ax.set_axisbelow(True)
             ax.xaxis.set_minor_locator(MultipleLocator(1))
@@ -193,11 +228,18 @@ class ScreenResults(QWidget):
             ax.grid(which='both', linewidth=0.25)
             ax.set_xticks([])
             ax.set_yticks([])
+            ax.tick_params(which='both', length=0)
 
             self.matplotlib_widget.canvas.draw()
 
-            model = KerfusTableModel(kerfus_tabT)
-            self.kerfus_table.setModel(model)
+            modelT = KerfusTableModel(kerfus_tabT)
+            self.Topsis_table.setModel(modelT)
+
+            modelR = KerfusTableModel(kerfus_tabR)
+            self.RSM_table.setModel(modelR)
+
+            modelU = KerfusTableModel(kerfus_tabU)
+            self.Uta_table.setModel(modelU)
 
         except Exception as e:
             if str(e) == 'too many indices for array: array is 1-dimensional, but 2 were indexed':
