@@ -144,9 +144,15 @@ class ScreenUTA(QWidget):
         shop = map_data.values.T
         points = points_data.values
         minmax = [1, 1, 0, 0]  # 1- max, 0- min
+
+        _, points, _, _ = alg_RSM.add_distances(shop.copy(), points.copy())
+
         user_steps_count = self.data_manager.get_data("ranges").copy()
 
-        limits = uta_star.best(points[:, 1:], minmax)
+        limits = uta_star.best(points[:, 2:], minmax)
+        limits[1, 3] = np.max(points[:, 5])
+        limits[0, 3] = np.min(points[:, 5])
+
         default_steps = uta_star.steps(limits,
                                        user_steps_count)  # przedziały z wagami wygenerowane automatycznie pokazujemy użytkownikowi
 

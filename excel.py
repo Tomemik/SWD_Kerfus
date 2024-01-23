@@ -11,6 +11,14 @@ class ExcelTableScreen(QWidget):
         super().__init__()
         self.data_manager = data_manager
 
+        self.point_df = pd.read_excel('./dane/sklep_1.xlsx' ,sheet_name='punkty', usecols='B:F', skiprows=0,
+                                      nrows=100, keep_default_na=False)
+        self.data_manager.set_data("points", self.point_df)
+
+        self.map_df = pd.read_excel('./dane/sklep_1.xlsx', sheet_name='mapa', usecols='B:BE', skiprows=0,
+                                    nrows=29)
+        self.data_manager.set_data("map", self.map_df)
+
         self.layout = QVBoxLayout()
 
         # Initially set visibility to False
