@@ -86,7 +86,7 @@ def main():
     app.setStyleSheet(tlo)
     main_window = QMainWindow()
     main_window.setWindowTitle("Kerfus")
-    main_window.setGeometry(100, 100, 1200, 900)
+    main_window.setGeometry(100, 100, 1200, 700)
 
     data_manager = DataManager()
 
@@ -110,6 +110,7 @@ def main():
     main_window.setWindowIcon(QIcon(icon_path))
     main_window.show()
     sys.exit(app.exec())
+
 
 
 if __name__ == "__main__":
