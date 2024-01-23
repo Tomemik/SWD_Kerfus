@@ -22,7 +22,7 @@ class ExcelTableScreen(QWidget):
         self.layout = QVBoxLayout()
 
         # Initially set visibility to False
-        self.label = QLabel("Zaimportowane dane (Ostanie 2 kolumny zostaną wygnerowane automatycznie)")
+        self.label = QLabel("Zaimportowane dane")
         self.label.setStyleSheet("font-size: 15px; color: white;")
         self.label.setVisible(False)
         self.layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignHCenter)
