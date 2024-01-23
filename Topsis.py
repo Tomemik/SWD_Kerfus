@@ -4,7 +4,8 @@ from PyQt6.QtCore import Qt, QAbstractTableModel
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
-
+from a_star import astar_search
+from matplotlib.ticker import MultipleLocator
 from data_manager import DataManager
 import alg_topsis
 import alg_RSM
@@ -34,7 +35,8 @@ class MatplotlibWidget(QWidget):
 class KerfusTableModel(QAbstractTableModel):
     def __init__(self, kerfus_tab, parent=None):
         super().__init__(parent)
-        self.data = kerfus_tab
+        self.headers = kerfus_tab[0]  # Extract headers from the first row
+        self.data = kerfus_tab[1:]  # Exclude the first row (headers) from the data
 
     def rowCount(self, parent):
         return len(self.data)
@@ -44,7 +46,21 @@ class KerfusTableModel(QAbstractTableModel):
 
     def data(self, index, role):
         if role == Qt.ItemDataRole.DisplayRole:
-            return str(self.data[index.row()][index.column()])
+            value = self.data[index.row()][index.column()]
+            # Convert the first column to int
+            if index.column() != 3 and value is not None:
+                return int(float(value))
+            return str(value) if value is not None else ""  # Set an empty string for None values
+        return None
+
+    def headerData(self, section, orientation, role):
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                # Set headers from the extracted headers
+                return str(self.headers[section]) if section < len(self.headers) else ""
+            elif orientation == Qt.Orientation.Vertical:
+                # Set vertical headers with row numbers
+                return str(section) if section < len(self.data) else ""
         return None
 
 
@@ -104,7 +120,7 @@ class ScreenTopsis(QWidget):
         self.kerfus_table.horizontalHeader().setStyleSheet(stylesheet)
 
         stylesheet = "::section{Background-color:rgb(69, 67, 84);}"
-        self.kerfus_table.verticalHeader().setStyleSheet(stylesheet)
+        self.kerfus_table.verticalHeader().setVisible(False)
 
         self.kerfus_table.setStyleSheet("background-color: rgb(69, 67, 84); color: white;border:2px;border-style: none;")
         right_layout.addWidget(self.kerfus_table)
@@ -142,10 +158,47 @@ class ScreenTopsis(QWidget):
             points_ref = [(x, y) for x, y in points[:, :2]]
 
             # Pass the MatplotlibWidget instance to the topsis_results function
-            kerfus_tab, choices, new_ax = alg_topsis.topsis_results(points.copy(), self.weights, points_ref.copy(), arr.copy(), distance.copy(), base_coords)
+            kerfus_tab, choices, ranking = alg_topsis.topsis_results(points.copy(), self.weights, points_ref.copy(), arr.copy(), distance.copy(), base_coords)
 
-            # Update the MatplotlibWidget with the new figure
-            self.matplotlib_widget.update_figure(new_ax)
+            base = np.zeros(ranking.shape[1])
+            base[:2] = base_coords
+            ranking = np.append([base], ranking, axis=0)
+
+            shelves = np.argwhere(shop == 1)
+            entrance = np.argwhere(shop == 2)
+            exit = np.argwhere(shop == 3)
+            bread = np.argwhere(shop == 4)
+            meat = np.argwhere(shop == 5)
+
+            ax = self.matplotlib_widget.canvas.figure.add_subplot(111)
+
+            ax.scatter(points[:, 0], points[:, 1], c='red', s=5)
+            for ix in range(ranking.shape[0] - 1):
+                path = astar_search(shop, tuple(map(int, ranking[ix, :2])), tuple(map(int, ranking[ix + 1, :2])))
+                path = np.array(path)
+                ax.plot(path[:, 0], path[:, 1], '--', c='#1f77b4')
+            ax.scatter(ranking[:, 0], ranking[:, 1])
+            ax.scatter(shelves[:, 0], shelves[:, 1], c='lightblue', marker='s', s=26)
+            ax.scatter(entrance[:, 0], entrance[:, 1], c='green', marker='s', s=26)
+            ax.scatter(exit[:, 0], exit[:, 1], c='red', marker='s', s=26)
+            ax.scatter(bread[:, 0], bread[:, 1], c='grey', marker='s', s=26)
+            ax.scatter(meat[:, 0], meat[:, 1], c='orange', marker='s', s=26)
+
+            for i in range(ranking.shape[0]):
+                ax.annotate(i, tuple(ranking[i, :2]))
+
+            ax.set_axisbelow(True)
+            ax.xaxis.set_minor_locator(MultipleLocator(1))
+            ax.yaxis.set_minor_locator(MultipleLocator(1))
+            ax.set_aspect('equal', adjustable='box')
+            ax.set_xlim((-0.5, 55.5))
+            ax.set_ylim((28.5, -0.5))
+            ax.grid(which='both', linewidth=0.25)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.tick_params(which='both', length=0)
+
+            self.matplotlib_widget.canvas.draw()
 
             model = KerfusTableModel(kerfus_tab)
             self.kerfus_table.setModel(model)

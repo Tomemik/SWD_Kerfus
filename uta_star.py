@@ -92,10 +92,9 @@ def uta_n_points(shop_map, base_coords, points, user_steps, points_ref, distance
         table_current, distances_current, points_ref_current = change_distance(table_current, distances_current,
                                                                                res[:2], points_ref_current)
 
-    fig = path_plot(path[1:], shop_map, points, base_coords)
-
+    rank = np.copy(path)
     lp = np.resize(range(1, n+1), (n, 1))
     path = np.append(lp, path[1:], axis=1)
     path = np.append([["lp", "x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]], path, axis=0)
 
-    return path, choices[1:], fig
+    return path, choices[1:], rank[1:]
