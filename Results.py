@@ -70,7 +70,7 @@ class ScreenResults(QWidget):
         left_layout = QVBoxLayout()
 
         self.execute_button = QPushButton(self)
-        self.execute_button.setStyleSheet("image: url(./grafika/but_rsm.png);"
+        self.execute_button.setStyleSheet("image: url(./grafika/but_wiz.png);"
                                           "width: 120px;"
                                           "height: 40px;"
                                           "margin: 0px;"
