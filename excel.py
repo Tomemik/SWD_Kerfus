@@ -76,10 +76,10 @@ class ExcelTableScreen(QWidget):
         p.setColor(self.backgroundRole(), QColor(69, 67, 84))  # You can set any color you want here
         self.setPalette(p)
 
-    def load_point_data(self):
+    def load_point_data(self, fromSave=False):
         try:
             file_dialog = QFileDialog()
-            if self.punkty_file_path is None:
+            if not fromSave:
                 file_path, _ = file_dialog.getOpenFileName(self, "Open Excel File (Punkty)", "", "Excel Files (*.xlsx)")
                 self.punkty_file_path = file_path
             else:
@@ -145,7 +145,7 @@ class ExcelTableScreen(QWidget):
                 print(f"Changes saved successfully for Punkty File: {self.punkty_file_path}")
 
                 # Update the DataFrame after saving changes
-                self.load_point_data()
+                self.load_point_data(True)
 
         except Exception as e:
             print(f"Error saving changes to Punkty Excel: {e}")
