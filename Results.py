@@ -40,7 +40,10 @@ class KerfusTableModel(QAbstractTableModel):
     def data(self, index, role):
         if role == Qt.ItemDataRole.DisplayRole:
             value = self.data[index.row()][index.column()]
-            return str(value) if value is not None else ""  # Set empty string for None values
+            # Convert the first column to int
+            if index.column() != 3 and value is not None:
+                return int(float(value))
+            return str(value) if value is not None else ""  # Set an empty string for None values
         return None
 
     def headerData(self, section, orientation, role):
@@ -203,9 +206,9 @@ class ScreenResults(QWidget):
                 pathU = np.array(pathU)
                 ax.plot(pathU[:, 0], pathU[:, 1], '--', c='navy')
 
-            ax.scatter(kerfusT[:, 0], kerfusT[:, 1], c='seagreen')
-            ax.scatter(kerfusR[:, 0], kerfusR[:, 1], c='tomato')
-            ax.scatter(kerfusU[:, 0], kerfusU[:, 1], c='navy')
+            ax.scatter(kerfusT[:, 0], kerfusT[:, 1], c='seagreen', label="Wynik metody Topsis")
+            ax.scatter(kerfusR[:, 0], kerfusR[:, 1], c='tomato', label="Wynik metody RSM")
+            ax.scatter(kerfusU[:, 0], kerfusU[:, 1], c='navy', label="Wynik metody Uta*")
 
             ax.scatter(shelves[:, 0], shelves[:, 1], c='lightblue', marker='s', s=26)
             ax.scatter(entrance[:, 0], entrance[:, 1], c='green', marker='s', s=26)
@@ -229,6 +232,7 @@ class ScreenResults(QWidget):
             ax.set_xticks([])
             ax.set_yticks([])
             ax.tick_params(which='both', length=0)
+            ax.legend(loc='upper center', bbox_to_anchor=(0.5, 0.0), ncol=3)
 
             self.matplotlib_widget.canvas.draw()
 
