@@ -72,8 +72,11 @@ class ExcelTableScreen(QWidget):
     def load_point_data(self):
         try:
             file_dialog = QFileDialog()
-            file_path, _ = file_dialog.getOpenFileName(self, "Open Excel File (Punkty)", "", "Excel Files (*.xlsx)")
-            self.punkty_file_path = file_path
+            if self.punkty_file_path is None:
+                file_path, _ = file_dialog.getOpenFileName(self, "Open Excel File (Punkty)", "", "Excel Files (*.xlsx)")
+                self.punkty_file_path = file_path
+            else:
+                file_path = self.punkty_file_path
 
             if file_path:
                 workbook = openpyxl.load_workbook(file_path)
@@ -119,7 +122,7 @@ class ExcelTableScreen(QWidget):
         try:
             if self.punkty_file_path:
                 workbook = openpyxl.load_workbook(self.punkty_file_path)
-                sheet = workbook.active
+                sheet = workbook['punkty']
 
                 for row in range(self.table_widget.rowCount()):
                     for col in range(self.table_widget.columnCount()):
