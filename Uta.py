@@ -263,7 +263,11 @@ class WeightInputDialog(QDialog):
             layout.addWidget(label)
             layout.addWidget(input_field)
 
+
+
             self.weight_inputs.append(input_field)
+
+        self.update_sum_label()
 
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         button_box.accepted.connect(self.accept_and_pre_run)
@@ -310,6 +314,7 @@ class UserStepsDialog(QDialog):
         self.user_steps = user_steps
         self.init_ui()
         self.utascrn = utascrn
+        self.setWindowTitle("Kreator wag")
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -318,11 +323,12 @@ class UserStepsDialog(QDialog):
 
 
         col_name = ["przedzial", "wagi"]
+        names = ["popularność", "szerokość przejazdu", "przeszkadzanie", "odległości od bazy"]
         for array_index, array in enumerate(self.user_steps):
             array_layout = QVBoxLayout()
 
 
-            array_label = QLabel(f"Przedział {array_index + 1}", self)
+            array_label = QLabel(names[array_index], self)
             array_layout.addWidget(array_label)
 
             user_steps_table = QTableWidget(self)
@@ -351,8 +357,8 @@ class UserStepsDialog(QDialog):
 
         layout.addWidget(button_box)
         self.setLayout(layout)
-        self.setMinimumWidth(600)  # Set the minimum width as needed
-        self.setMaximumWidth(400)  # Set the maximum width as needed
+        self.setMinimumHeight(700)  # Set the minimum width as needed
+        self.setMaximumWidth(600)  # Set the maximum width as needed
 
         for table in self.tables:
             header = table.horizontalHeader()
