@@ -198,9 +198,9 @@ class WeightInputDialog(QDialog):
         layout = QVBoxLayout()
 
         self.weight_inputs = []
-
+        nazwy = ["popularności", "szerokości przejazdu", "przeszkadzania", "odległości od bazy", "odległości od ostatniego położenia"]
         for _ in range(4):
-            label = QLabel(f"Liczba przedziałów dla {_ + 1} kryterium:", self)
+            label = QLabel(f"Liczba przedziałów dla kryterium {nazwy[_]}", self)
             input_field = QLineEdit(self)
             input_field.textChanged.connect(self.update_sum_label)
 
