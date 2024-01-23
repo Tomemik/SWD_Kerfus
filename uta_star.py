@@ -94,7 +94,7 @@ def uta_n_points(shop_map, base_coords, points, user_steps, points_ref, distance
 
     rank = np.copy(path)
     lp = np.resize(range(1, n+1), (n, 1))
-    path = np.append(lp, path[1:], axis=1)
+    path = np.append(lp, np.around(path[1:], decimals=3), axis=1)
     path = np.append([["lp", "x", "y", "ci", "popularność", "szerokość przejazdu", "przeszkadzanie", "odległość"]], path, axis=0)
 
     return path, choices[1:], rank[1:]
