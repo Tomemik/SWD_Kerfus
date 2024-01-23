@@ -189,7 +189,7 @@ class ScreenUTA(QWidget):
 class WeightInputDialog(QDialog):
     def __init__(self, data_manager: DataManager, parent=None):
         super().__init__(parent)
-
+        self.setWindowTitle("Kreator przedziałów")
         self.data_manager = data_manager
 
         self.init_ui()
@@ -203,6 +203,7 @@ class WeightInputDialog(QDialog):
             label = QLabel(f"Liczba przedziałów dla kryterium {nazwy[_]}", self)
             input_field = QLineEdit(self)
             input_field.textChanged.connect(self.update_sum_label)
+            input_field.setText("3")
 
             layout.addWidget(label)
             layout.addWidget(input_field)
@@ -260,14 +261,22 @@ class UserStepsDialog(QDialog):
 
         self.tables = []  # Keep track of tables to access them later for updates
 
+
+        col_name = ["przedzial", "wagi"]
         for array_index, array in enumerate(self.user_steps):
+            array_layout = QVBoxLayout()
+
+
+            array_label = QLabel(f"Przedział {array_index + 1}", self)
+            array_layout.addWidget(array_label)
+
             user_steps_table = QTableWidget(self)
             user_steps_table.setRowCount(array.shape[0])
             user_steps_table.setColumnCount(array.shape[1])
 
             # Set custom horizontal headers for each column
             for col in range(array.shape[1]):
-                user_steps_table.setHorizontalHeaderItem(col, QTableWidgetItem(f"Array {array_index + 1}, Column {col + 1}"))
+                user_steps_table.setHorizontalHeaderItem(col, QTableWidgetItem(col_name[col]))
 
             # Populate the table
             for row in range(array.shape[0]):
@@ -278,7 +287,8 @@ class UserStepsDialog(QDialog):
             # Connect the signal to the custom slot for updating values
             user_steps_table.itemChanged.connect(partial(self.update_array_value, array_index=array_index))
 
-            layout.addWidget(user_steps_table)
+            array_layout.addWidget(user_steps_table)
+            layout.addLayout(array_layout)
             self.tables.append(user_steps_table)
 
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
@@ -286,6 +296,13 @@ class UserStepsDialog(QDialog):
 
         layout.addWidget(button_box)
         self.setLayout(layout)
+        self.setMinimumWidth(600)  # Set the minimum width as needed
+        self.setMaximumWidth(400)  # Set the maximum width as needed
+
+        for table in self.tables:
+            header = table.horizontalHeader()
+            for col in range(table.columnCount()):
+                header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)  # Adjust as needed
 
     def update_array_value(self, item, array_index):
         # Slot to update the corresponding value in the array when the table item is changed
