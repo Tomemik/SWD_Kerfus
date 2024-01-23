@@ -93,7 +93,7 @@ class ScreenUTA(QWidget):
         left_layout.addWidget(self.execute_button)
 
         self.execute_button = QPushButton(self)
-        self.execute_button.setStyleSheet("image: url(./grafika/but_wagi.png);"
+        self.execute_button.setStyleSheet("image: url(./grafika/but_klasy.png);"
                                           "width: 120px;"
                                           "height: 60px;"
                                           "margin: 0px;"
@@ -251,6 +251,10 @@ class WeightInputDialog(QDialog):
 
     def init_ui(self):
         layout = QVBoxLayout()
+        self.text_label = QLabel(self)
+        self.text_label.setText("Należy podać liczbę przedziałów na jaką ma być podzielony każdy z parametrów.\n")
+        self.text_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        layout.addWidget(self.text_label)
 
         self.weight_inputs = []
         nazwy = ["popularności", "szerokości przejazdu", "przeszkadzania", "odległości od bazy", "odległości od ostatniego położenia"]
@@ -321,9 +325,18 @@ class UserStepsDialog(QDialog):
 
         self.tables = []  # Keep track of tables to access them later for updates
 
+        self.text_label = QLabel(self)
+        self.text_label.setText("Wartości pomiędzy punktami tworzą przedziały o odpowiednich wagach.\n"
+                                "Przedziały o wysokim pożądaniu powinny mieć wysokie wagi.\n"
+                                "Suma wag pierwszych wierszy każdego kryterium musi być równa 1, a suma ostanich 0.\n"
+                                "Pozostałe sumy w wierszach powinny być w kolejności malejącej.\n")
+
+
+        self.text_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        layout.addWidget(self.text_label)
 
         col_name = ["przedzial", "wagi"]
-        names = ["popularność", "szerokość przejazdu", "przeszkadzanie", "odległości od bazy"]
+        names = ["Popularność", "Szerokość przejazdu", "Przeszkadzanie", "Odległości od bazy"]
         for array_index, array in enumerate(self.user_steps):
             array_layout = QVBoxLayout()
 
@@ -358,12 +371,9 @@ class UserStepsDialog(QDialog):
         layout.addWidget(button_box)
         self.setLayout(layout)
         self.setMinimumHeight(700)  # Set the minimum width as needed
-        self.setMaximumWidth(600)  # Set the maximum width as needed
+        self.setMaximumWidth(300)  # Set the maximum width as needed
 
-        for table in self.tables:
-            header = table.horizontalHeader()
-            for col in range(table.columnCount()):
-                header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)  # Adjust as needed
+
 
     def update_array_value(self, item, array_index):
         # Slot to update the corresponding value in the array when the table item is changed

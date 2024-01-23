@@ -92,7 +92,7 @@ class ScreenTopsis(QWidget):
         left_layout.addWidget(self.execute_button)
 
         self.execute_button = QPushButton(self)
-        self.execute_button.setStyleSheet("image: url(./grafika/but_wagi.png);"
+        self.execute_button.setStyleSheet("image: url(./grafika/but_klasy.png);"
                                          "width: 120px;"
                                          "height: 60px;"
                                          "margin: 0px;"
@@ -244,9 +244,6 @@ class WeightInputDialog(QDialog):
         self.text_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
         layout.addWidget(self.text_label)
 
-        self.sum_label = QLabel("Suma wag: 1.0", self)
-        layout.addWidget(self.sum_label)
-
         for _ in range(4):
             label = QLabel(nazwy[_], self)
             input_field = QLineEdit(self)
@@ -258,6 +255,10 @@ class WeightInputDialog(QDialog):
             layout.addWidget(input_field)
 
             self.weight_inputs.append(input_field)
+
+        self.sum_label = QLabel("Suma wag: 1.0", self)
+        layout.addWidget(self.sum_label)
+        self.update_sum_label()
 
 
 
@@ -273,7 +274,7 @@ class WeightInputDialog(QDialog):
             # Update the sum label when any input field text is changed
             weights = [float(input_field.text()) if input_field.text() else 0 for input_field in self.weight_inputs]
             summed_weights = sum(weights)
-            self.sum_label.setText(f"Summed Weights: {summed_weights}")
+            self.sum_label.setText(f"Suma wag: {summed_weights}")
         except Exception as e:
             print("Exception in update_sum_label:", str(e))
 
@@ -283,14 +284,14 @@ class WeightInputDialog(QDialog):
         summed_weights = sum(weights)
 
         # Update the sum label
-        self.sum_label.setText(f"Summed Weights: {summed_weights}")
+        self.sum_label.setText(f"Suma wag: {summed_weights}")
 
         if summed_weights == 1:
             self.accept()
         else:
             # Display a popup with an error message
-            error_message = "Error: The sum of weights must equal 1."
-            QMessageBox.critical(self, "Error", error_message, QMessageBox.StandardButton.Ok)
+            error_message = "Suma wag musi wynosić 1."
+            QMessageBox.critical(self, "Błąd", error_message, QMessageBox.StandardButton.Ok)
 
             # Do not accept the dialog
             self.reject()
