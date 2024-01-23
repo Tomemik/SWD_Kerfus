@@ -240,7 +240,7 @@ class WeightInputDialog(QDialog):
         nazwy = ["Popularność", "Szerokość przejazdu", "Przeszkadzanie", "Odległość od bazy", "Odległość od ostatniego położenia"]
 
         self.text_label = QLabel(self)
-        self.text_label.setText("Należy podać jak bardzo ważne są poszczególne wartości dla decyzji. \n Im większa waga tym bardziej liczy się parametr.")
+        self.text_label.setText("Należy podać jak bardzo ważne są poszczególne wartości dla decyzji. \n Im większa waga tym bardziej liczy się parametr.\n Suma wag musi wynosić 1.")
         self.text_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
         layout.addWidget(self.text_label)
 
