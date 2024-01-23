@@ -129,4 +129,4 @@ def topsis_results(points, weights, points_ref, shop_map, distance_each_other, b
 
     fig = path_plot(kerfus, shop_map, points, base_coords)
 
-    return kerfus_tab, choices, fig
+    return kerfus_tab, choices, kerfus

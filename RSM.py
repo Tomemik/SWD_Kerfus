@@ -198,6 +198,7 @@ class ScreenRSM(QWidget):
             ax.grid(which='both', linewidth=0.25)
             ax.set_xticks([])
             ax.set_yticks([])
+            ax.tick_params(which='both', length=0)
 
             self.matplotlib_widget.canvas.draw()
 
