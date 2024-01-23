@@ -153,7 +153,7 @@ class ScreenUTA(QWidget):
         user_steps = default_steps  # przedziały z wagami zmienione przez użytkownika
 
         #print(user_steps)
-        self.data_manager.set_data("steps", user_steps)
+        self.data_manager.set_data("steps", np.around(user_steps, decimals=3))
 
     def run_uta(self):
         try:
